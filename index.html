@@ -3,187 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventario y Caja - Sagrados</title>
-    <!-- Librería XLSX para Importar y Exportar Excel -->
+    <title>Inventario y Caja Sagrados</title>
+    <!-- Tailwind CSS for modern responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome icons for UI -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SheetJS for Excel import/export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <style>
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #f4f6f9; margin: 0; padding: 20px; }
-        h1, h2, h3 { text-align: center; color: #2c3e50; }
-        
-        /* Pantalla de Bloqueo / Login */
-        #login-screen {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-        .login-card {
-            background: white;
-            padding: 40px 30px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            text-align: center;
-            width: 90%;
-            max-width: 400px;
-        }
-        .login-card h2 { margin-top: 0; color: #1e3c72; }
-        .login-card input[type="password"] {
-            width: 100%;
-            padding: 12px;
-            margin: 15px 0;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 16px;
-            text-align: center;
-        }
-        .login-card button {
-            width: 100%;
-            padding: 12px;
-            background-color: #27ae60;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .login-card button:hover { background-color: #219150; }
-        .login-error { color: #e74c3c; font-size: 14px; margin-top: 10px; display: none; }
-
-        /* Estilos principales de la app */
-        #app-content { display: none; }
-
-        .menu-principal { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            width: 100%;
-            max-width: 1250px;
-            margin: 0 auto 20px auto; 
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .main-btn { 
-            flex: 1; 
-            padding: 12px 15px; 
-            border: none; 
-            background-color: #2c3e50; 
-            color: white; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            font-size: 15px; 
-            font-weight: bold; 
-            transition: background 0.2s;
-            text-align: center;
-            min-width: 140px;
-        }
-        .main-btn:hover { background-color: #34495e; }
-        .main-btn.active { background-color: #3498db; }
-
-        .dropdown-container { flex: 1; display: flex; min-width: 160px; }
-        .select-apartados { 
-            width: 100%;
-            padding: 12px 15px; 
-            border: none; 
-            background-color: #2c3e50; 
-            color: white; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            font-size: 15px; 
-            font-weight: bold; 
-            text-align: center;
-            appearance: none; 
-        }
-        .select-apartados.active { background-color: #3498db; }
-
-        .tab-content { display: none; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 1250px; margin: 0 auto; }
-        .tab-content.active { display: block; }
-
-        form, .filtros { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        label { font-weight: bold; color: #34495e; font-size: 14px; }
-        input, select, button { width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 6px; margin-top: 5px; }
-
-        .btn { border: none; color: white; font-weight: bold; cursor: pointer; border-radius: 6px; padding: 8px 12px; margin: 2px; }
-        .btn-registrar { background-color: #2ecc71; }
-        .btn-editar { background-color: #3498db; }
-        .btn-eliminar { background-color: #e74c3c; }
-        .btn-limpiar { background-color: #95a5a6; }
-        .btn-abono { background-color: #f39c12; }
-        .btn-excel { background-color: #27ae60; }
-        .btn-retiro { background-color: #c0392b; }
-        .btn-admin { background-color: #8e44ad; }
-
-        .table-responsive { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 10px; text-align: left; border: 1px solid #ddd; font-size: 14px; }
-        th { background-color: #2c3e50; color: white; }
-
-        tr.estado-disponible { background-color: #ffffff; }
-        tr.estado-vendida { background-color: #fef9e7; color: #7d6608; }
-        tr.estado-sucia { background-color: #fadbd8; color: #78281f; }
-        tr.seleccionado-inventario { background-color: #d4edda !important; }
-
-        .card-ventas, .card-inventario, .card-caja { background-color: #eaf2f8; padding: 15px; border-radius: 8px; margin-top: 15px; margin-bottom: 15px; }
-        .grid-caja { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; text-align: center; }
-        .box-caja { background: white; padding: 15px; border-radius: 8px; border: 1px solid #d6dbdf; }
-        .box-caja h4 { margin: 0 0 5px 0; color: #7f8c8d; }
-        .box-caja p { margin: 0; font-size: 20px; font-weight: bold; color: #2c3e50; }
-
-        .checkbox-inventario { width: 18px; height: 18px; cursor: pointer; }
-
-        /* Botón discreto para eliminar todo */
-        .btn-peligro-oculto {
-            background-color: #fadbd8;
-            color: #78281f;
-            border: 1px dashed #e74c3c;
-            padding: 6px 12px;
-            font-size: 12px;
-            font-weight: bold;
-            cursor: pointer;
-            border-radius: 4px;
-            opacity: 0.6;
-            transition: opacity 0.2s;
-        }
-        .btn-peligro-oculto:hover {
-            opacity: 1;
-            background-color: #e74c3c;
-            color: white;
-        }
-
-        /* Modales */
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
-        .modal-content { background-color: #fff; margin: 2% auto; padding: 25px; border-radius: 10px; width: 90%; max-width: 650px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        .close-modal { float: right; font-size: 24px; font-weight: bold; cursor: pointer; color: #aaa; }
-        .close-modal:hover { color: #000; }
-        .history-list { max-height: 180px; overflow-y: auto; background: #f8f9fa; border: 1px solid #e9ecef; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
-        .history-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding: 6px 0; }
-        .badge { padding: 3px 7px; border-radius: 4px; font-size: 12px; font-weight: bold; color: white; display: inline-block; }
-        .badge-inmediato { background-color: #2ecc71; }
-        .badge-separe { background-color: #e67e22; }
-        .badge-credito { background-color: #9b59b6; }
-        .badge-efectivo { background-color: #27ae60; }
-        .badge-transferencia { background-color: #2980b9; }
-
-        .admin-section {
-            background-color: #f3e5f5;
-            border: 1px solid #ab47bc;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: none;
-        }
-    </style>
-
+    
+    <!-- Firebase Realtime Database SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, set, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, get, update, onValue, child, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyD8_E22Paj2Ws16e1TtIEIuUZHcJoeKeCE",
             authDomain: "inventario-sagrados.firebaseapp.com",
@@ -195,482 +28,926 @@
             measurementId: "G-E4V2B84XXL"
         };
 
+        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        const inventarioRef = ref(db, 'inventario');
-        const cajaRef = ref(db, 'caja_registradora');
-        const configRef = ref(db, 'config');
+        window.db = db;
+        window.fbRef = ref;
+        window.fbSet = set;
+        window.fbGet = get;
+        window.fbUpdate = update;
+        window.fbOnValue = onValue;
+        window.fbChild = child;
+        window.fbRemove = remove;
+    </script>
 
-        window.inventario = {};
-        window.datosCaja = { base: 0, retiros: [] };
-        window.productoActualModal = null;
-        window.indiceAbonoEditando = -1;
-        window.indiceRetiroEditando = -1;
-        window.claveAcceso = "1234"; // Clave por defecto inicial
+    <style>
+        .modal {
+            transition: opacity 0.25s ease;
+        }
+        body.modal-active {
+            overflow-x: hidden;
+            overflow-y: hidden !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800 min-h-screen flex flex-col">
 
-        // Escuchar Configuración (Contraseña Global)
-        onValue(configRef, (snapshot) => {
-            const config = snapshot.val();
-            if (config && config.password) {
-                window.claveAcceso = String(config.password);
-            } else {
-                // Crear contraseña inicial por defecto en Firebase si no existe
-                set(ref(db, 'config/password'), "1234");
-            }
+    <header class="bg-indigo-900 text-white shadow-lg sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center flex-wrap gap-2">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-cross text-yellow-400 text-2xl"></i>
+                <h1 class="text-xl font-bold tracking-wide">Sagrados - Inventario & Caja</h1>
+            </div>
+            
+            <div id="deviceStatusBadge" class="hidden sm:flex items-center text-xs px-3 py-1 rounded-full bg-indigo-800 text-indigo-200 border border-indigo-700">
+                <span id="deviceIdDisplay" class="font-mono">ID: ...</span>
+                <span id="adminBadge" class="ml-2 bg-yellow-500 text-gray-900 px-2 py-0.5 rounded font-bold hidden">ADMIN</span>
+            </div>
+
+            <div class="flex items-center space-x-2" id="headerNavControls">
+                <!-- Change password (Only for Admins) -->
+                <button id="btnChangePassword" onclick="openChangePasswordModal()" class="hidden bg-indigo-700 hover:bg-indigo-600 text-xs text-white px-3 py-1.5 rounded transition">
+                    <i class="fa-solid fa-key mr-1"></i> Clave
+                </button>
+                <!-- Admin Management (Only visible on Admin Devices) -->
+                <button id="btnManageAdmins" onclick="openAdminDevicesModal()" class="hidden bg-amber-600 hover:bg-amber-500 text-xs text-white px-3 py-1.5 rounded transition font-medium">
+                    <i class="fa-solid fa-shield-halved mr-1"></i> Dispositivos Admin
+                </button>
+                <!-- Lock session -->
+                <button id="btnLogout" onclick="logout()" class="hidden bg-red-600 hover:bg-red-500 text-xs text-white px-3 py-1.5 rounded transition">
+                    <i class="fa-solid fa-right-from-bracket mr-1"></i> Salir
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-6">
+
+        <!-- VIEW 1: LOGIN / PASSWORD SCREEN -->
+        <div id="loginView" class="max-w-md mx-auto mt-12 bg-white p-8 rounded-xl shadow-xl border border-gray-200">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-indigo-100 text-indigo-800 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800">Acceso al Sistema</h2>
+                <p class="text-gray-500 text-sm mt-1">Ingrese la contraseña para continuar</p>
+            </div>
+
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña de Entrada</label>
+                    <input type="password" id="inputPassword" required placeholder="••••" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                </div>
+                <button type="submit" class="w-full bg-indigo-800 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg shadow-md transition flex justify-center items-center">
+                    <i class="fa-solid fa-right-to-bracket mr-2"></i> Ingresar
+                </button>
+            </form>
+            <div id="loginError" class="text-red-500 text-sm text-center mt-3 hidden">Contraseña incorrecta</div>
+        </div>
+
+        <!-- VIEW 2: MAIN DASHBOARD (HIDDEN BY DEFAULT) -->
+        <div id="dashboardView" class="hidden space-y-6">
+
+            <!-- TAB NAVIGATION -->
+            <div class="flex border-b border-gray-200 bg-white rounded-t-lg shadow-sm px-4 pt-2">
+                <button id="tabBtnCaja" onclick="switchTab('caja')" class="py-3 px-6 text-indigo-900 border-b-2 border-indigo-900 font-semibold flex items-center space-x-2">
+                    <i class="fa-solid fa-cash-register"></i> <span>Caja Registradora</span>
+                </button>
+                <button id="tabBtnInventario" onclick="switchTab('inventario')" class="py-3 px-6 text-gray-500 hover:text-indigo-900 font-medium flex items-center space-x-2">
+                    <i class="fa-solid fa-boxes-stacked"></i> <span>Inventario</span>
+                </button>
+                <button id="tabBtnReportes" onclick="switchTab('reportes')" class="py-3 px-6 text-gray-500 hover:text-indigo-900 font-medium flex items-center space-x-2">
+                    <i class="fa-solid fa-chart-line"></i> <span>Resumen Financiero</span>
+                </button>
+            </div>
+
+            <!-- TAB 1: CAJA REGISTRADORA -->
+            <div id="tabCaja" class="space-y-6">
+                <!-- Status Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+                        <div class="text-gray-500 text-sm font-medium">Base Inicial en Caja</div>
+                        <div class="text-2xl font-bold text-gray-800 mt-1" id="displayBaseCaja">$0</div>
+                        <button onclick="openSetBaseModal()" class="mt-2 text-xs text-indigo-700 hover:underline flex items-center">
+                            <i class="fa-solid fa-pen-to-square mr-1"></i> Modificar Base
+                        </button>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+                        <div class="text-gray-500 text-sm font-medium">Ventas en Efectivo</div>
+                        <div class="text-2xl font-bold text-emerald-600 mt-1" id="displayVentasEfectivo">$0</div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+                        <div class="text-gray-500 text-sm font-medium">Ventas por Transferencia</div>
+                        <div class="text-2xl font-bold text-blue-600 mt-1" id="displayVentasTransferencia">$0</div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+                        <div class="text-gray-500 text-sm font-medium">Efectivo Total en Caja</div>
+                        <div class="text-2xl font-bold text-indigo-900 mt-1" id="displayEfectivoTotal">$0</div>
+                        <div class="text-xs text-gray-400 mt-1">(Base + Ventas Efectivo - Retiros)</div>
+                    </div>
+                </div>
+
+                <!-- Sales Action Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Left: Registrar Venta Rápidamente -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-4">
+                        <h3 class="font-bold text-gray-800 text-lg flex items-center">
+                            <i class="fa-solid fa-cart-plus text-indigo-800 mr-2"></i> Registrar Venta
+                        </h3>
+                        <div>
+                            <label class="block text-sm text-gray-600 mb-1">Buscar Producto en Disponible</label>
+                            <select id="selectProductoVenta" class="w-full border rounded-lg p-2.5 bg-gray-50 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                                <option value="">Seleccione un producto...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-600 mb-1">Método de Pago</label>
+                            <select id="selectMetodoPago" class="w-full border rounded-lg p-2.5 bg-gray-50 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                                <option value="Efectivo">Efectivo</option>
+                                <option value="Transferencia">Transferencia</option>
+                            </select>
+                        </div>
+                        <button onclick="procesarVentaRapida()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-lg shadow transition flex items-center justify-center">
+                            <i class="fa-solid fa-check mr-2"></i> Confirmar Venta
+                        </button>
+                    </div>
+
+                    <!-- Right: Movimientos / Retiros de Caja -->
+                    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-4">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-bold text-gray-800 text-lg flex items-center">
+                                <i class="fa-solid fa-hand-holding-dollar text-amber-600 mr-2"></i> Retiros / Salidas de Caja
+                            </h3>
+                            <button onclick="openRetiroModal()" class="bg-amber-600 hover:bg-amber-500 text-white text-xs px-3 py-1.5 rounded shadow transition">
+                                <i class="fa-solid fa-minus mr-1"></i> Registrar Retiro
+                            </button>
+                        </div>
+
+                        <div class="overflow-x-auto max-h-48">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-gray-100 text-gray-600">
+                                    <tr>
+                                        <th class="p-2">Hora</th>
+                                        <th class="p-2">Motivo</th>
+                                        <th class="p-2 text-right">Monto</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableRetirosBody" class="divide-y divide-gray-100">
+                                    <tr><td colspan="3" class="p-4 text-center text-gray-400">Sin retiros registrados</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: INVENTARIO -->
+            <div id="tabInventario" class="hidden space-y-6">
+                <!-- Action Controls -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-wrap gap-3 justify-between items-center">
+                    <div class="flex items-center space-x-2 flex-grow max-w-md">
+                        <div class="relative w-full">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400"></i>
+                            <input type="text" id="inputSearchInventory" onkeyup="filterInventory()" placeholder="Buscar por código, nombre o categoría..." class="w-full pl-9 pr-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <button onclick="openAddProductModal()" class="bg-indigo-800 hover:bg-indigo-700 text-white text-sm px-4 py-2 rounded-lg font-medium shadow transition flex items-center">
+                            <i class="fa-solid fa-plus mr-1.5"></i> Agregar Producto
+                        </button>
+                        <button onclick="exportToExcel()" class="bg-emerald-700 hover:bg-emerald-600 text-white text-sm px-3 py-2 rounded-lg font-medium shadow transition">
+                            <i class="fa-solid fa-file-excel mr-1"></i> Exportar Excel
+                        </button>
+                        <label class="bg-blue-700 hover:bg-blue-600 text-white text-sm px-3 py-2 rounded-lg font-medium shadow cursor-pointer transition">
+                            <i class="fa-solid fa-file-import mr-1"></i> Importar Excel
+                            <input type="file" id="excelFileInput" onchange="importFromExcel(event)" class="hidden" accept=".xlsx, .xls">
+                        </label>
+                        <button id="btnDeleteAll" onclick="confirmDeleteAllData()" class="hidden bg-red-700 hover:bg-red-600 text-white text-sm px-3 py-2 rounded-lg font-medium shadow transition">
+                            <i class="fa-solid fa-trash mr-1"></i> Borrar Todo
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Inventory Table -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-indigo-900 text-white">
+                                <tr>
+                                    <th class="p-3">Código</th>
+                                    <th class="p-3">Producto</th>
+                                    <th class="p-3">Categoría</th>
+                                    <th class="p-3 text-right">Precio ($)</th>
+                                    <th class="p-3 text-center">Estado</th>
+                                    <th class="p-3 text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryTableBody" class="divide-y divide-gray-200">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: RESUMEN FINANCIERO / REPORTES -->
+            <div id="tabReportes" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Métricas Globales de Inventario y Ventas</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                        <div class="bg-emerald-50 p-4 rounded-lg border border-emerald-200">
+                            <div class="text-emerald-800 text-sm font-semibold">Total Ingresos por Ventas</div>
+                            <div class="text-2xl font-bold text-emerald-900 mt-1" id="repTotalVentas">$0</div>
+                            <div class="text-xs text-emerald-700 mt-1" id="repCountVendido">0 Productos Vendidos</div>
+                        </div>
+
+                        <div class="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                            <div class="text-amber-800 text-sm font-semibold">Valor en Estado 'Sucio/Perdido'</div>
+                            <div class="text-2xl font-bold text-amber-900 mt-1" id="repTotalSucio">$0</div>
+                            <div class="text-xs text-amber-700 mt-1" id="repCountSucio">0 Productos Sucios</div>
+                        </div>
+
+                        <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+                            <div class="text-indigo-800 text-sm font-semibold">Valor Total Inventario Disponible</div>
+                            <div class="text-2xl font-bold text-indigo-900 mt-1" id="repTotalDisponible">$0</div>
+                            <div class="text-xs text-indigo-700 mt-1" id="repCountDisponible">0 Productos Disponibles</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    
+    <!-- MODAL: ADMIN DEVICES MANAGEMENT (Only accesible from authorized Admin devices) -->
+    <div id="adminDevicesModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="closeAdminDevicesModal()"></div>
+        <div class="modal-container bg-white w-11/12 max-w-2xl mx-auto rounded-xl shadow-2xl z-50 overflow-y-auto">
+            <div class="py-4 text-left px-6 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-gray-800 flex items-center">
+                    <i class="fa-solid fa-shield-halved text-amber-600 mr-2"></i> Gestión de Dispositivos Administradores
+                </h3>
+                <button onclick="closeAdminDevicesModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <p class="text-sm text-gray-600">
+                    A continuación se listan todos los dispositivos que han ingresado al sistema. Desde este equipo puedes autorizar o revocar los permisos de Administrador para otros dispositivos en tiempo real.
+                </p>
+                
+                <div class="overflow-x-auto max-h-64 border rounded-lg">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-gray-100 text-gray-700">
+                            <tr>
+                                <th class="p-3">ID Dispositivo</th>
+                                <th class="p-3">Último Acceso</th>
+                                <th class="p-3 text-center">Estado</th>
+                                <th class="p-3 text-center">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="devicesListTableBody" class="divide-y divide-gray-200">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="px-6 py-3 bg-gray-50 flex justify-end">
+                <button onclick="closeAdminDevicesModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 text-sm font-medium">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD / EDIT PRODUCT -->
+    <div id="productModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="closeProductModal()"></div>
+        <div class="modal-container bg-white w-11/12 max-w-md mx-auto rounded-xl shadow-2xl z-50 overflow-y-auto">
+            <div class="py-4 text-left px-6 border-b border-gray-200 flex justify-between items-center">
+                <h3 id="productModalTitle" class="text-lg font-bold text-gray-800">Agregar Producto</h3>
+                <button onclick="closeProductModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <form onsubmit="handleSaveProduct(event)" class="p-6 space-y-4">
+                <input type="hidden" id="prodEditId">
+                <div>
+                    <label class="block text-sm text-gray-700 mb-1">Código Único</label>
+                    <input type="text" id="prodCode" required class="w-full border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-700 mb-1">Nombre del Producto</label>
+                    <input type="text" id="prodName" required class="w-full border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-700 mb-1">Categoría</label>
+                    <input type="text" id="prodCategory" placeholder="Ej: Velas, Imágenes, Rosarios" class="w-full border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-700 mb-1">Precio ($)</label>
+                    <input type="number" id="prodPrice" required min="0" step="100" class="w-full border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-700 mb-1">Estado Inicial</label>
+                    <select id="prodStatus" class="w-full border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="Disponible">Disponible</option>
+                        <option value="Vendido">Vendido</option>
+                        <option value="Sucio">Sucio</option>
+                    </select>
+                </div>
+                <div class="pt-2 flex justify-end space-x-2">
+                    <button type="button" onclick="closeProductModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-800 text-white rounded-lg hover:bg-indigo-700 text-sm font-bold">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: SET BASE CAJA -->
+    <div id="baseModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="closeSetBaseModal()"></div>
+        <div class="modal-container bg-white w-11/12 max-w-sm mx-auto rounded-xl shadow-2xl z-50 overflow-y-auto">
+            <div class="py-4 text-left px-6 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-gray-800">Base Inicial de Caja</h3>
+                <button onclick="closeSetBaseModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <form onsubmit="handleSaveBase(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-700 mb-1">Monto Base ($)</label>
+                    <input type="number" id="inputBaseMonto" required min="0" step="100" class="w-full border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" onclick="closeSetBaseModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-800 text-white rounded-lg text-sm font-bold">Guardar Base</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: RETIRO CAJA -->
+    <div id="retiroModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="closeRetiroModal()"></div>
+        <div class="modal-container bg-white w-11/12 max-w-sm mx-auto rounded-xl shadow-2xl z-50 overflow-y-auto">
+            <div class="py-4 text-left px-6 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-gray-800">Registrar Retiro / Salida</h3>
+                <button onclick="closeRetiroModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <form onsubmit="handleSaveRetiro(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-700 mb-1">Monto a Retirar ($)</label>
+                    <input type="number" id="inputRetiroMonto" required min="1" step="100" class="w-full border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-700 mb-1">Motivo / Concepto</label>
+                    <input type="text" id="inputRetiroMotivo" required placeholder="Ej: Pago de transporte, Almuerzo" class="w-full border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" onclick="closeRetiroModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-bold">Registrar Retiro</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: CHANGE PASSWORD (Admins only) -->
+    <div id="changePassModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="closeChangePasswordModal()"></div>
+        <div class="modal-container bg-white w-11/12 max-w-sm mx-auto rounded-xl shadow-2xl z-50 overflow-y-auto">
+            <div class="py-4 text-left px-6 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-gray-800">Cambiar Contraseña General</h3>
+                <button onclick="closeChangePasswordModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <form onsubmit="handleSaveNewPassword(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-700 mb-1">Nueva Contraseña</label>
+                    <input type="password" id="inputNewPass" required placeholder="••••" class="w-full border rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" onclick="closeChangePasswordModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-800 text-white rounded-lg text-sm font-bold">Actualizar Clave</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Unique Device Identifier (persisted in local device storage)
+        let deviceId = localStorage.getItem('sagrados_device_id');
+        if (!deviceId) {
+            deviceId = 'DEV-' + Math.random().toString(36).substring(2, 9).toUpperCase();
+            localStorage.setItem('sagrados_device_id', deviceId);
+        }
+
+        // Local State
+        let currentProducts = [];
+        let currentCaja = { base: 0, retiros: [] };
+        let masterPassword = "1234"; // Default fallback password
+        let isAdminDevice = localStorage.getItem('sagrados_is_admin') === 'true';
+        let registeredDevices = {};
+
+        // On Page Load Initialize
+        window.addEventListener('load', () => {
+            document.getElementById('deviceIdDisplay').innerText = `ID: ${deviceId}`;
+            checkAdminStatusUI();
+
+            // Wait for Firebase initialization
+            const checkFirebase = setInterval(() => {
+                if (window.db) {
+                    clearInterval(checkFirebase);
+                    initFirebaseListeners();
+                }
+            }, 100);
         });
 
-        // Autenticar Acceso
-        window.verificarAcceso = function() {
-            const inputPass = document.getElementById('input-password-login').value;
-            const errorElement = document.getElementById('login-error-msg');
+        function initFirebaseListeners() {
+            // 1. Register/Update device activity in database
+            const deviceRef = window.fbRef(window.db, `devices/${deviceId}`);
+            window.fbUpdate(deviceRef, {
+                lastSeen: new Date().toISOString(),
+                id: deviceId
+            });
 
-            if (inputPass === window.claveAcceso) {
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('app-content').style.display = 'block';
-                verificarRolAdministrador();
+            // Listen for Admin authorization status for this specific device
+            window.fbOnValue(window.fbRef(window.db, `devices/${deviceId}/isAdmin`), (snapshot) => {
+                const val = snapshot.val();
+                if (val === true) {
+                    isAdminDevice = true;
+                    localStorage.setItem('sagrados_is_admin', 'true');
+                } else if (val === false) {
+                    isAdminDevice = false;
+                    localStorage.setItem('sagrados_is_admin', 'false');
+                }
+                checkAdminStatusUI();
+            });
+
+            // Listen for list of all registered devices
+            window.fbOnValue(window.fbRef(window.db, 'devices'), (snapshot) => {
+                registeredDevices = snapshot.val() || {};
+                renderDevicesTable();
+            });
+
+            // 2. Password Sync
+            window.fbOnValue(window.fbRef(window.db, 'config/password'), (snapshot) => {
+                if (snapshot.exists()) {
+                    masterPassword = snapshot.val();
+                } else {
+                    window.fbSet(window.fbRef(window.db, 'config/password'), "1234");
+                }
+            });
+
+            // 3. Products Sync
+            window.fbOnValue(window.fbRef(window.db, 'caja_registradora/productos'), (snapshot) => {
+                const data = snapshot.val();
+                currentProducts = data ? Object.keys(data).map(k => ({ ...data[k], _id: k })) : [];
+                renderInventoryTable();
+                populateVentaDropdown();
+                calculateFinancialReports();
+            });
+
+            // 4. Caja Sync
+            window.fbOnValue(window.fbRef(window.db, 'caja_registradora/caja'), (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    currentCaja = {
+                        base: data.base || 0,
+                        retiros: data.retiros ? Object.values(data.retiros) : []
+                    };
+                }
+                renderCajaData();
+                calculateFinancialReports();
+            });
+        }
+
+        function checkAdminStatusUI() {
+            const adminBadge = document.getElementById('adminBadge');
+            const btnManageAdmins = document.getElementById('btnManageAdmins');
+            const btnChangePassword = document.getElementById('btnChangePassword');
+            const btnDeleteAll = document.getElementById('btnDeleteAll');
+
+            if (isAdminDevice) {
+                adminBadge.classList.remove('hidden');
+                btnManageAdmins.classList.remove('hidden');
+                btnChangePassword.classList.remove('hidden');
+                btnDeleteAll.classList.remove('hidden');
             } else {
-                errorElement.style.display = 'block';
-            }
-        };
-
-        // Verificar si este dispositivo es el Administrador
-        function verificarRolAdministrador() {
-            const esAdmin = localStorage.getItem('esAdminSagrados') === 'true';
-            if (esAdmin) {
-                const btnConfig = document.getElementById('btn-admin-config');
-                if (btnConfig) btnConfig.style.display = 'inline-block';
-                const secAdmin = document.getElementById('seccion-admin');
-                if (secAdmin) secAdmin.style.display = 'block';
+                adminBadge.classList.add('hidden');
+                btnManageAdmins.classList.add('hidden');
+                btnChangePassword.classList.add('hidden');
+                btnDeleteAll.classList.add('hidden');
             }
         }
 
-        // Definir este computador como el Administrador
-        window.activarModoAdministrador = function() {
-            const confirmacion = confirm("¿Deseas activar este computador como el Equipo Administrador de Sagrados?\n(Solo este equipo podrá cambiar la contraseña)");
-            if (confirmacion) {
-                localStorage.setItem('esAdminSagrados', 'true');
-                alert("¡Este equipo ha sido activado como Administrador!");
-                verificarRolAdministrador();
-            }
-        };
-
-        // Cambiar la contraseña global en Firebase
-        window.cambiarContrasenaGlobal = function() {
-            const nuevaPass = document.getElementById('nueva-contrasena').value.trim();
-            if (!nuevaPass) {
-                alert('Por favor escribe una nueva contraseña válida.');
-                return;
-            }
-
-            set(ref(db, 'config/password'), nuevaPass).then(() => {
-                alert('¡Contraseña actualizada con éxito en todos los computadores!');
-                document.getElementById('nueva-contrasena').value = '';
-                cerrarModalAdmin();
-            }).catch(err => {
-                alert('Error al actualizar la contraseña: ' + err.message);
-            });
-        };
-
-        // Escuchar cambios en el Inventario
-        onValue(inventarioRef, (snapshot) => {
-            const data = snapshot.val();
-            window.inventario = data || {};
-            renderizarTablas();
-            renderizarVentas();
-            renderizarCaja();
-            if (window.productoActualModal && window.inventario[window.productoActualModal] && document.getElementById('modal-abonos').style.display === 'block') {
-                abrirModalAbonos(window.productoActualModal, false);
-            }
-        });
-
-        // Escuchar cambios en la Caja Registradora
-        onValue(cajaRef, (snapshot) => {
-            const data = snapshot.val();
-            window.datosCaja = data || { base: 0, retiros: [] };
-            if (!window.datosCaja.retiros) window.datosCaja.retiros = [];
-            document.getElementById('input-base-caja').value = window.datosCaja.base || 0;
-            renderizarCaja();
-        });
-
-        window.guardarBaseCaja = function() {
-            const nuevaBase = parseFloat(document.getElementById('input-base-caja').value) || 0;
-            update(ref(db, 'caja_registradora'), { base: nuevaBase });
-            alert('¡Base de caja actualizada!');
-        };
-
-        window.guardarRegistro = function(e) {
+        function handleLogin(e) {
             e.preventDefault();
-            const id = document.getElementById('prenda-id').value;
-            const categoria = document.getElementById('categoria').value;
-            const referencia = document.getElementById('referencia').value.trim();
-            const nombre = document.getElementById('nombre').value.trim();
-            const color = document.getElementById('color').value.trim();
-            const marca = document.getElementById('marca').value.trim();
-            const talla = document.getElementById('talla').value.trim();
-            const precio = parseFloat(document.getElementById('precio').value);
-            const estado = document.getElementById('estado').value;
+            const inputPass = document.getElementById('inputPassword').value;
+            const errorDiv = document.getElementById('loginError');
 
-            if (id) {
-                const prodExistente = window.inventario[id];
-                const totalAbonado = (prodExistente.pagos || []).reduce((acc, p) => acc + p.monto, 0);
-
-                if (precio < totalAbonado) {
-                    alert(`¡Error! El precio ($${precio}) no puede ser menor a lo ya abonado ($${totalAbonado}).`);
-                    return;
-                }
-
-                update(ref(db, 'inventario/' + id), {
-                    categoria, referencia, nombre, color, marca, talla, precio, estado
-                });
-
-                if (estado === 'vendida' && (!prodExistente.pagos || prodExistente.pagos.length === 0)) {
-                    abrirModalAbonos(id);
-                }
+            if (inputPass === masterPassword) {
+                document.getElementById('loginView').classList.add('hidden');
+                document.getElementById('dashboardView').classList.remove('hidden');
+                document.getElementById('btnLogout').classList.remove('hidden');
+                document.getElementById('deviceStatusBadge').classList.remove('hidden');
+                errorDiv.classList.add('hidden');
             } else {
-                const nuevoRef = push(inventarioRef);
-                const nuevoId = nuevoRef.key;
-                set(nuevoRef, {
-                    categoria, referencia, nombre, color, marca, talla, precio, estado,
-                    marcado: false, tipoPago: 'inmediato', pagos: []
-                }).then(() => {
-                    if (estado === 'vendida') {
-                        abrirModalAbonos(nuevoId);
-                    }
-                });
+                errorDiv.classList.remove('hidden');
             }
-            limpiarFormulario();
-            mostrarSeccion('inventario');
-        };
+        }
 
-        window.toggleSeleccion = function(id, estadoMarcado) {
-            update(ref(db, 'inventario/' + id), { marcado: estadoMarcado });
-        };
+        function logout() {
+            document.getElementById('loginView').classList.remove('hidden');
+            document.getElementById('dashboardView').classList.add('hidden');
+            document.getElementById('btnLogout').classList.add('hidden');
+            document.getElementById('inputPassword').value = '';
+        }
 
-        window.desmarcarTodos = function() {
-            if (confirm('¿Deseas desmarcar todos los productos?')) {
-                Object.keys(window.inventario).forEach(id => {
-                    update(ref(db, 'inventario/' + id), { marcado: false });
-                });
-            }
-        };
+        function openAdminDevicesModal() {
+            if (!isAdminDevice) return;
+            renderDevicesTable();
+            toggleModal('adminDevicesModal', true);
+        }
 
-        window.eliminarTodoInventario = function() {
-            // AVISO 1
-            const confirm1 = confirm('⚠️ AVISO 1 DE 3:\n¿Estás seguro de que deseas ELIMINAR TODO EL INVENTARIO? Esta acción borrará todos los productos registrados.');
-            if (!confirm1) return;
+        function closeAdminDevicesModal() {
+            toggleModal('adminDevicesModal', false);
+        }
 
-            // AVISO 2
-            const confirm2 = confirm('🚨 AVISO 2 DE 3:\n¡Atención! Se eliminarán de forma permanente todos los registros de ropa y sus historiales. ¿Deseas continuar?');
-            if (!confirm2) return;
+        function renderDevicesTable() {
+            const tbody = document.getElementById('devicesListTableBody');
+            if (!tbody) return;
 
-            // AVISO 3
-            const confirm3 = confirm('🔥 AVISO FINAL 3 DE 3:\nÚltima advertencia: Escribe "ACEPTAR" en tu mente y confirma. ¿Deseas borrar TODO en este instante?');
-            if (!confirm3) return;
+            tbody.innerHTML = '';
+            const devKeys = Object.keys(registeredDevices);
 
-            remove(inventarioRef).then(() => {
-                alert('Todo el inventario ha sido eliminado.');
-            });
-        };
-
-        window.cambiarEstadoRapido = function(id, nuevoEstado) {
-            const prenda = window.inventario[id];
-            update(ref(db, 'inventario/' + id), { estado: nuevoEstado });
-            if (nuevoEstado === 'vendida' && (!prenda.pagos || prenda.pagos.length === 0)) {
-                abrirModalAbonos(id);
-            }
-        };
-
-        window.eliminarPrenda = function(id) {
-            if (confirm('¿Deseas eliminar este registro?')) {
-                remove(ref(db, 'inventario/' + id));
-            }
-        };
-
-        window.guardarAbono = function() {
-            const id = window.productoActualModal;
-            const prenda = window.inventario[id];
-            const tipoPago = document.getElementById('modal-tipo-pago').value;
-            const medioPago = document.getElementById('modal-medio-pago').value;
-            const monto = parseFloat(document.getElementById('modal-monto-abono').value);
-            const fecha = document.getElementById('modal-fecha-abono').value;
-
-            if (isNaN(monto) || monto <= 0) {
-                alert('Ingresa un monto de abono válido.');
+            if (devKeys.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-400">No hay otros dispositivos registrados.</td></tr>';
                 return;
             }
 
-            const pagosActuales = prenda.pagos ? [...prenda.pagos] : [];
+            devKeys.forEach(k => {
+                const dev = registeredDevices[k];
+                const isCurrent = k === deviceId;
+                const isDevAdmin = dev.isAdmin === true;
 
-            if (tipoPago === 'inmediato') {
-                if (monto !== prenda.precio) {
-                    alert(`En Pago Inmediato no se permiten abonos parciales. El monto debe ser igual al precio total ($${prenda.precio.toLocaleString('es-CO')}).`);
-                    return;
-                }
-                pagosActuales.length = 0;
-                pagosActuales.push({
-                    monto: monto,
-                    fecha: fecha,
-                    cuotaNum: 1,
-                    tipoPago: tipoPago,
-                    medioPago: medioPago
-                });
-            } else {
-                if (window.indiceAbonoEditando >= 0) {
-                    const montoAnterior = pagosActuales[window.indiceAbonoEditando].monto;
-                    const sumaSinEditado = pagosActuales.reduce((acc, p) => acc + p.monto, 0) - montoAnterior;
-                    
-                    if (sumaSinEditado + monto > prenda.precio) {
-                        alert(`¡El monto ($${(sumaSinEditado + monto).toLocaleString('es-CO')}) supera el precio total ($${prenda.precio.toLocaleString('es-CO')}).`);
-                        return;
-                    }
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-3 font-mono text-xs">
+                        ${k} ${isCurrent ? '<span class="text-indigo-600 font-bold">(Este Equipo)</span>' : ''}
+                    </td>
+                    <td class="p-3 text-xs text-gray-500">${dev.lastSeen ? new Date(dev.lastSeen).toLocaleTimeString() : 'N/A'}</td>
+                    <td class="p-3 text-center">
+                        <span class="px-2 py-0.5 text-xs font-bold rounded ${isDevAdmin ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-600'}">
+                            ${isDevAdmin ? 'ADMIN' : 'USUARIO'}
+                        </span>
+                    </td>
+                    <td class="p-3 text-center">
+                        ${isCurrent ? '<span class="text-xs text-gray-400">Self</span>' : `
+                            <button onclick="toggleDeviceAdminPermission('${k}', ${!isDevAdmin})" class="px-2 py-1 text-xs font-semibold rounded text-white ${isDevAdmin ? 'bg-red-600 hover:bg-red-500' : 'bg-emerald-600 hover:bg-emerald-500'}">
+                                ${isDevAdmin ? 'Revocar Admin' : 'Autorizar Admin'}
+                            </button>
+                        `}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
 
-                    pagosActuales[window.indiceAbonoEditando] = {
-                        monto, fecha, cuotaNum: pagosActuales[window.indiceAbonoEditando].cuotaNum, tipoPago, medioPago
-                    };
-                    window.indiceAbonoEditando = -1;
+        function toggleDeviceAdminPermission(targetDevId, newAdminStatus) {
+            if (!isAdminDevice) return;
+            const targetRef = window.fbRef(window.db, `devices/${targetDevId}/isAdmin`);
+            window.fbSet(targetRef, newAdminStatus);
+        }
+
+        function switchTab(tabName) {
+            ['caja', 'inventario', 'reportes'].forEach(t => {
+                const tabEl = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+                const btnEl = document.getElementById(`tabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`);
+                
+                if (t === tabName) {
+                    tabEl.classList.remove('hidden');
+                    btnEl.className = "py-3 px-6 text-indigo-900 border-b-2 border-indigo-900 font-semibold flex items-center space-x-2";
                 } else {
-                    const sumaActual = pagosActuales.reduce((acc, p) => acc + p.monto, 0);
-                    if (sumaActual + monto > prenda.precio) {
-                        alert(`¡El total abonado ($${(sumaActual + monto).toLocaleString('es-CO')}) supera el precio total ($${prenda.precio.toLocaleString('es-CO')}).`);
-                        return;
+                    tabEl.classList.add('hidden');
+                    btnEl.className = "py-3 px-6 text-gray-500 hover:text-indigo-900 font-medium flex items-center space-x-2";
+                }
+            });
+        }
+
+        function renderInventoryTable() {
+            const tbody = document.getElementById('inventoryTableBody');
+            const searchVal = (document.getElementById('inputSearchInventory')?.value || '').toLowerCase();
+            tbody.innerHTML = '';
+
+            const filtered = currentProducts.filter(p => 
+                (p.codigo || '').toLowerCase().includes(searchVal) ||
+                (p.nombre || '').toLowerCase().includes(searchVal) ||
+                (p.categoria || '').toLowerCase().includes(searchVal)
+            );
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-400">No se encontraron productos</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(p => {
+                let badgeColor = 'bg-emerald-100 text-emerald-800';
+                if (p.estado === 'Vendido') badgeColor = 'bg-blue-100 text-blue-800';
+                if (p.estado === 'Sucio') badgeColor = 'bg-amber-100 text-amber-800';
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50";
+                tr.innerHTML = `
+                    <td class="p-3 font-mono text-xs font-bold text-gray-600">${p.codigo}</td>
+                    <td class="p-3 font-medium text-gray-800">${p.nombre}</td>
+                    <td class="p-3 text-gray-500">${p.categoria || 'N/A'}</td>
+                    <td class="p-3 text-right font-bold text-gray-800">$${(p.precio || 0).toLocaleString()}</td>
+                    <td class="p-3 text-center">
+                        <select onchange="updateProductStatus('${p._id}', this.value)" class="text-xs font-semibold rounded-full px-2.5 py-1 ${badgeColor} outline-none cursor-pointer">
+                            <option value="Disponible" ${p.estado === 'Disponible' ? 'selected' : ''}>Disponible</option>
+                            <option value="Vendido" ${p.estado === 'Vendido' ? 'selected' : ''}>Vendido</option>
+                            <option value="Sucio" ${p.estado === 'Sucio' ? 'selected' : ''}>Sucio</option>
+                        </select>
+                    </td>
+                    <td class="p-3 text-center space-x-2">
+                        <button onclick="openEditProductModal('${p._id}')" class="text-indigo-600 hover:text-indigo-900"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteProduct('${p._id}')" class="text-red-600 hover:text-red-900"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterInventory() {
+            renderInventoryTable();
+        }
+
+        function openAddProductModal() {
+            document.getElementById('productModalTitle').innerText = "Agregar Producto";
+            document.getElementById('prodEditId').value = "";
+            document.getElementById('prodCode').value = "P-" + Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('prodName').value = "";
+            document.getElementById('prodCategory').value = "";
+            document.getElementById('prodPrice').value = "";
+            document.getElementById('prodStatus').value = "Disponible";
+            toggleModal('productModal', true);
+        }
+
+        function openEditProductModal(id) {
+            const prod = currentProducts.find(p => p._id === id);
+            if (!prod) return;
+
+            document.getElementById('productModalTitle').innerText = "Editar Producto";
+            document.getElementById('prodEditId').value = id;
+            document.getElementById('prodCode').value = prod.codigo || "";
+            document.getElementById('prodName').value = prod.nombre || "";
+            document.getElementById('prodCategory').value = prod.categoria || "";
+            document.getElementById('prodPrice').value = prod.precio || 0;
+            document.getElementById('prodStatus').value = prod.estado || "Disponible";
+            toggleModal('productModal', true);
+        }
+
+        function closeProductModal() {
+            toggleModal('productModal', false);
+        }
+
+        function handleSaveProduct(e) {
+            e.preventDefault();
+            const editId = document.getElementById('prodEditId').value;
+            const productData = {
+                codigo: document.getElementById('prodCode').value,
+                nombre: document.getElementById('prodName').value,
+                categoria: document.getElementById('prodCategory').value,
+                precio: parseFloat(document.getElementById('prodPrice').value) || 0,
+                estado: document.getElementById('prodStatus').value
+            };
+
+            if (editId) {
+                window.fbUpdate(window.fbRef(window.db, `caja_registradora/productos/${editId}`), productData);
+            } else {
+                const newRef = window.fbRef(window.db, 'caja_registradora/productos/' + Date.now());
+                window.fbSet(newRef, productData);
+            }
+
+            closeProductModal();
+        }
+
+        function updateProductStatus(id, newStatus, metodoPago = null) {
+            const updates = { estado: newStatus };
+            if (metodoPago) {
+                updates.metodoPago = metodoPago;
+                updates.fechaVenta = new Date().toISOString();
+            }
+            window.fbUpdate(window.fbRef(window.db, `caja_registradora/productos/${id}`), updates);
+        }
+
+        function deleteProduct(id) {
+            if (confirm("¿Está seguro de eliminar este producto del inventario?")) {
+                window.fbRemove(window.fbRef(window.db, `caja_registradora/productos/${id}`));
+            }
+        }
+
+        function populateVentaDropdown() {
+            const select = document.getElementById('selectProductoVenta');
+            select.innerHTML = '<option value="">Seleccione un producto...</option>';
+            
+            const disponibles = currentProducts.filter(p => p.estado === 'Disponible');
+            disponibles.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p._id;
+                opt.textContent = `${p.nombre} (${p.codigo}) - $${p.precio.toLocaleString()}`;
+                select.appendChild(opt);
+            });
+        }
+
+        function procesarVentaRapida() {
+            const prodId = document.getElementById('selectProductoVenta').value;
+            const metodo = document.getElementById('selectMetodoPago').value;
+
+            if (!prodId) {
+                alert("Por favor seleccione un producto disponible.");
+                return;
+            }
+
+            updateProductStatus(prodId, 'Vendido', metodo);
+            document.getElementById('selectProductoVenta').value = "";
+        }
+
+        function renderCajaData() {
+            let ventasEfectivo = 0;
+            let ventasTransferencia = 0;
+
+            currentProducts.forEach(p => {
+                if (p.estado === 'Vendido') {
+                    if (p.metodoPago === 'Transferencia') {
+                        ventasTransferencia += (p.precio || 0);
+                    } else {
+                        ventasEfectivo += (p.precio || 0); // Default to Cash
                     }
+                }
+            });
 
-                    pagosActuales.push({
-                        monto: monto,
-                        fecha: fecha,
-                        cuotaNum: pagosActuales.length + 1,
-                        tipoPago: tipoPago,
-                        medioPago: medioPago
-                    });
+            const totalRetiros = currentCaja.retiros.reduce((acc, r) => acc + (r.monto || 0), 0);
+            const efectivoTotal = currentCaja.base + ventasEfectivo - totalRetiros;
+
+            document.getElementById('displayBaseCaja').innerText = `$${currentCaja.base.toLocaleString()}`;
+            document.getElementById('displayVentasEfectivo').innerText = `$${ventasEfectivo.toLocaleString()}`;
+            document.getElementById('displayVentasTransferencia').innerText = `$${ventasTransferencia.toLocaleString()}`;
+            document.getElementById('displayEfectivoTotal').innerText = `$${efectivoTotal.toLocaleString()}`;
+
+            // Render retiros table
+            const tbody = document.getElementById('tableRetirosBody');
+            tbody.innerHTML = '';
+            if (currentCaja.retiros.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-400">Sin retiros registrados</td></tr>';
+            } else {
+                currentCaja.retiros.forEach(r => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="p-2 text-gray-400 font-mono text-xs">${r.hora || 'N/A'}</td>
+                        <td class="p-2 font-medium text-gray-700">${r.motivo}</td>
+                        <td class="p-2 text-right font-bold text-red-600">-$${r.monto.toLocaleString()}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+        function openSetBaseModal() {
+            document.getElementById('inputBaseMonto').value = currentCaja.base;
+            toggleModal('baseModal', true);
+        }
+
+        function closeSetBaseModal() {
+            toggleModal('baseModal', false);
+        }
+
+        function handleSaveBase(e) {
+            e.preventDefault();
+            const newBase = parseFloat(document.getElementById('inputBaseMonto').value) || 0;
+            window.fbSet(window.fbRef(window.db, 'caja_registradora/caja/base'), newBase);
+            closeSetBaseModal();
+        }
+
+        function openRetiroModal() {
+            document.getElementById('inputRetiroMonto').value = "";
+            document.getElementById('inputRetiroMotivo').value = "";
+            toggleModal('retiroModal', true);
+        }
+
+        function closeRetiroModal() {
+            toggleModal('retiroModal', false);
+        }
+
+        function handleSaveRetiro(e) {
+            e.preventDefault();
+            const monto = parseFloat(document.getElementById('inputRetiroMonto').value) || 0;
+            const motivo = document.getElementById('inputRetiroMotivo').value;
+
+            const newRetiro = {
+                monto,
+                motivo,
+                hora: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+
+            const newRef = window.fbRef(window.db, 'caja_registradora/caja/retiros/' + Date.now());
+            window.fbSet(newRef, newRetiro);
+            closeRetiroModal();
+        }
+
+        function calculateFinancialReports() {
+            let totalVentas = 0, countVendido = 0;
+            let totalSucio = 0, countSucio = 0;
+            let totalDisponible = 0, countDisponible = 0;
+
+            currentProducts.forEach(p => {
+                const precio = p.precio || 0;
+                if (p.estado === 'Vendido') {
+                    totalVentas += precio;
+                    countVendido++;
+                } else if (p.estado === 'Sucio') {
+                    totalSucio += precio;
+                    countSucio++;
+                } else if (p.estado === 'Disponible') {
+                    totalDisponible += precio;
+                    countDisponible++;
+                }
+            });
+
+            document.getElementById('repTotalVentas').innerText = `$${totalVentas.toLocaleString()}`;
+            document.getElementById('repCountVendido').innerText = `${countVendido} Productos Vendidos`;
+
+            document.getElementById('repTotalSucio').innerText = `$${totalSucio.toLocaleString()}`;
+            document.getElementById('repCountSucio').innerText = `${countSucio} Productos Sucios`;
+
+            document.getElementById('repTotalDisponible').innerText = `$${totalDisponible.toLocaleString()}`;
+            document.getElementById('repCountDisponible').innerText = `${countDisponible} Productos Disponibles`;
+        }
+
+        function openChangePasswordModal() {
+            if (!isAdminDevice) return;
+            document.getElementById('inputNewPass').value = "";
+            toggleModal('changePassModal', true);
+        }
+
+        function closeChangePasswordModal() {
+            toggleModal('changePassModal', false);
+        }
+
+        function handleSaveNewPassword(e) {
+            e.preventDefault();
+            if (!isAdminDevice) return;
+            const newPass = document.getElementById('inputNewPass').value;
+            if (newPass.trim()) {
+                window.fbSet(window.fbRef(window.db, 'config/password'), newPass.trim());
+                alert("Contraseña de acceso actualizada correctamente.");
+                closeChangePasswordModal();
+            }
+        }
+
+        function confirmDeleteAllData() {
+            if (!isAdminDevice) return;
+            if (confirm("⚠️ ¡ATENCIÓN! ¿Está seguro de borrar TODO el inventario y registros de caja? Esta acción no se puede deshacer.")) {
+                const pass = prompt("Ingrese la contraseña para confirmar:");
+                if (pass === masterPassword) {
+                    window.fbRemove(window.fbRef(window.db, 'caja_registradora'));
+                    alert("Todos los datos han sido borrados.");
+                } else {
+                    alert("Contraseña incorrecta.");
                 }
             }
+        }
 
-            update(ref(db, 'inventario/' + id), {
-                tipoPago: tipoPago,
-                pagos: pagosActuales,
-                estado: 'vendida',
-                fechaVenta: fecha
-            });
-
-            limpiarFormularioAbono();
-            cerrarModal();
-        };
-
-        window.editarAbono = function(index) {
-            const prenda = window.inventario[window.productoActualModal];
-            if (!prenda || !prenda.pagos[index]) return;
-
-            const abono = prenda.pagos[index];
-            window.indiceAbonoEditando = index;
-
-            document.getElementById('modal-monto-abono').value = abono.monto;
-            document.getElementById('modal-fecha-abono').value = abono.fecha;
-            document.getElementById('modal-tipo-pago').value = abono.tipoPago || prenda.tipoPago;
-            document.getElementById('modal-medio-pago').value = abono.medioPago || 'efectivo';
-
-            document.getElementById('btn-guardar-abono').innerText = "Actualizar Abono";
-            document.getElementById('btn-guardar-abono').className = "btn btn-editar";
-            document.getElementById('btn-cancelar-abono-edit').style.display = "inline-block";
-        };
-
-        window.eliminarAbono = function(index) {
-            if (!confirm('¿Deseas eliminar este abono?')) return;
-
-            const id = window.productoActualModal;
-            const prenda = window.inventario[id];
-            let pagosActuales = prenda.pagos ? [...prenda.pagos] : [];
-
-            pagosActuales.splice(index, 1);
-            pagosActuales = pagosActuales.map((p, idx) => ({ ...p, cuotaNum: idx + 1 }));
-
-            const nuevoEstado = pagosActuales.length === 0 ? 'disponible' : 'vendida';
-            const ultimaFecha = pagosActuales.length > 0 ? pagosActuales[pagosActuales.length - 1].fecha : null;
-
-            update(ref(db, 'inventario/' + id), {
-                pagos: pagosActuales,
-                estado: nuevoEstado,
-                fechaVenta: ultimaFecha
-            });
-
-            limpiarFormularioAbono();
-            if (pagosActuales.length === 0) cerrarModal();
-        };
-
-        window.limpiarFormularioAbono = function() {
-            window.indiceAbonoEditando = -1;
-            document.getElementById('modal-monto-abono').value = '';
-            document.getElementById('modal-fecha-abono').value = new Date().toISOString().slice(0, 10);
-            document.getElementById('btn-guardar-abono').innerText = "Registrar Abono";
-            document.getElementById('btn-guardar-abono').className = "btn btn-registrar";
-            document.getElementById('btn-cancelar-abono-edit').style.display = "none";
-        };
-
-        window.cambiarTipoPagoModal = function(nuevoTipo) {
-            const id = window.productoActualModal;
-            const prenda = window.inventario[id];
-            if (nuevoTipo === 'inmediato' && prenda) {
-                document.getElementById('modal-monto-abono').value = prenda.precio;
-                document.getElementById('modal-monto-abono').readOnly = true;
-            } else {
-                document.getElementById('modal-monto-abono').readOnly = false;
-            }
-        };
-
-        window.registrarRetiroCaja = function() {
-            const monto = parseFloat(document.getElementById('monto-retiro').value);
-            const motivo = document.getElementById('motivo-retiro').value.trim();
-            const fecha = document.getElementById('fecha-retiro').value;
-
-            if (isNaN(monto) || monto <= 0 || !motivo) {
-                alert('Ingresa un monto válido y un motivo.');
+        function exportToExcel() {
+            if (currentProducts.length === 0) {
+                alert("No hay datos para exportar.");
                 return;
             }
 
-            const retiros = window.datosCaja.retiros ? [...window.datosCaja.retiros] : [];
+            const dataToExport = currentProducts.map(p => ({
+                'Código': p.codigo,
+                'Nombre': p.nombre,
+                'Categoría': p.categoria || '',
+                'Precio': p.precio,
+                'Estado': p.estado,
+                'Método Pago': p.metodoPago || ''
+            }));
 
-            if (window.indiceRetiroEditando >= 0) {
-                retiros[window.indiceRetiroEditando] = { monto, motivo, fecha };
-                window.indiceRetiroEditando = -1;
-            } else {
-                retiros.push({ monto, motivo, fecha });
-            }
+            const ws = XLSX.utils.json_to_sheet(dataToExport);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Inventario");
+            XLSX.writeFile(wb, "Inventario_Sagrados.xlsx");
+        }
 
-            update(ref(db, 'caja_registradora'), { retiros });
-            
-            document.getElementById('monto-retiro').value = '';
-            document.getElementById('motivo-retiro').value = '';
-            cerrarModalRetiro();
-        };
-
-        window.editarRetiroCaja = function(index) {
-            const retiros = window.datosCaja.retiros || [];
-            if (!retiros[index]) return;
-
-            window.indiceRetiroEditando = index;
-            document.getElementById('monto-retiro').value = retiros[index].monto;
-            document.getElementById('motivo-retiro').value = retiros[index].motivo;
-            document.getElementById('fecha-retiro').value = retiros[index].fecha;
-            
-            document.getElementById('btn-confirmar-retiro').innerText = "Actualizar Retiro";
-            abrirModalRetiro();
-        };
-
-        window.eliminarRetiroCaja = function(index) {
-            if (!confirm('¿Deseas eliminar este registro de retiro?')) return;
-            const retiros = window.datosCaja.retiros ? [...window.datosCaja.retiros] : [];
-            retiros.splice(index, 1);
-            update(ref(db, 'caja_registradora'), { retiros });
-        };
-
-        // Descargar Inventario a Excel
-        window.exportarAExcel = function() {
-            const dataExport = [];
-            Object.keys(window.inventario).forEach(id => {
-                const p = window.inventario[id];
-                dataExport.push({
-                    'CATEGORIA': p.categoria,
-                    'REFERENCIA': p.referencia,
-                    'NOMBRE': p.nombre,
-                    'COLOR': p.color,
-                    'MARCA': p.marca,
-                    'TALLA': p.talla,
-                    'PRECIO': p.precio,
-                    'ESTADO': p.estado
-                });
-            });
-
-            const worksheet = XLSX.utils.json_to_sheet(dataExport);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Inventario");
-            XLSX.writeFile(workbook, "Inventario_Sagrados.xlsx");
-        };
-
-        // Descargar Ventas a Excel
-        window.exportarVentasExcel = function() {
-            const dataExport = [];
-            const tipoFiltro = document.getElementById('tipo-filtro-ventas').value;
-            const mesSeleccionado = document.getElementById('filtro-mes').value;
-            const diaSeleccionado = document.getElementById('filtro-dia').value;
-
-            Object.keys(window.inventario).forEach(id => {
-                const prenda = window.inventario[id];
-                if (prenda.estado === 'vendida' && prenda.pagos) {
-                    prenda.pagos.forEach(p => {
-                        const coincideFecha = tipoFiltro === 'mes' ? 
-                            (p.fecha && p.fecha.startsWith(mesSeleccionado)) : 
-                            (p.fecha === diaSeleccionado);
-
-                        if (coincideFecha) {
-                            dataExport.push({
-                                'FECHA': p.fecha,
-                                'MEDIO PAGO': (p.medioPago || 'efectivo').toUpperCase(),
-                                'TIPO PAGO': (p.tipoPago || 'inmediato').toUpperCase(),
-                                'CUOTA': `Cuota #${p.cuotaNum}`,
-                                'CATEGORIA': prenda.categoria,
-                                'REFERENCIA': prenda.referencia,
-                                'NOMBRE': prenda.nombre,
-                                'PRECIO TOTAL': prenda.precio,
-                                'MONTO RECIBIDO': p.monto
-                            });
-                        }
-                    });
-                }
-            });
-
-            if (dataExport.length === 0) {
-                alert('No hay ventas registradas para el periodo seleccionado.');
-                return;
-            }
-
-            const worksheet = XLSX.utils.json_to_sheet(dataExport);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Ventas");
-            XLSX.writeFile(workbook, "Reporte_Ventas_Sagrados.xlsx");
-        };
-
-        // Descargar Caja Registradora a Excel
-        window.exportarCajaExcel = function() {
-            const dataExport = [];
-            const baseCaja = window.datosCaja.base || 0;
-
-            dataExport.push({ 'FECHA': '-', 'TIPO': 'BASE INICIAL', 'CONCEPTO': 'Base Fija de Caja', 'MONTO': baseCaja });
-
-            // Entradas de ventas
-            Object.keys(window.inventario).forEach(id => {
-                const prenda = window.inventario[id];
-                if (prenda.estado === 'vendida' && prenda.pagos) {
-                    prenda.pagos.forEach(p => {
-                        if ((p.medioPago || 'efectivo') === 'efectivo') {
-                            dataExport.push({
-                                'FECHA': p.fecha,
-                                'TIPO': 'ENTRADA (VENTA)',
-                                'CONCEPTO': `${prenda.nombre} - Cuota #${p.cuotaNum}`,
-                                'MONTO': p.monto
-                            });
-                        }
-                    });
-                }
-            });
-
-            // Retiros
-            const retiros = window.datosCaja.retiros || [];
-            retiros.forEach(r => {
-                dataExport.push({
-                    'FECHA': r.fecha,
-                    'TIPO': 'SALIDA (RETIRO)',
-                    'CONCEPTO': r.motivo,
-                    'MONTO': -r.monto
-                });
-            });
-
-            const worksheet = XLSX.utils.json_to_sheet(dataExport);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Caja Registradora");
-            XLSX.writeFile(workbook, "Reporte_Caja_Registradora.xlsx");
-        };
-
-        // Cargar/Importar Excel al Inventario
-        window.importarExcel = function(e) {
+        function importFromExcel(e) {
             const file = e.target.files[0];
             if (!file) return;
 
@@ -678,836 +955,36 @@
             reader.onload = function(evt) {
                 const data = new Uint8Array(evt.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
-                
-                let totalImportados = 0;
-                workbook.SheetNames.forEach(sheetName => {
-                    const sheet = workbook.Sheets[sheetName];
-                    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-                    
-                    let headerIdx = -1;
-                    for (let i = 0; i < rows.length; i++) {
-                        const rowStr = rows[i].map(c => String(c).toUpperCase()).join(' ');
-                        if (rowStr.includes('PRENDA') || rowStr.includes('REFE') || rowStr.includes('VALOR')) {
-                            headerIdx = i;
-                            break;
-                        }
-                    }
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const json = XLSX.utils.sheet_to_json(worksheet);
 
-                    if (headerIdx !== -1) {
-                        const headers = rows[headerIdx].map(c => String(c).trim().toUpperCase());
-                        
-                        for (let i = headerIdx + 1; i < rows.length; i++) {
-                            const row = rows[i];
-                            if (!row || row.length === 0) continue;
-
-                            const getCol = (key) => {
-                                const idx = headers.findIndex(h => h.includes(key));
-                                return idx !== -1 ? row[idx] : '';
-                            };
-
-                            const prenda = getCol('PRENDA') || getCol('NOMBRE');
-                            const valor = parseFloat(getCol('VALOR') || getCol('PRECIO'));
-
-                            if (prenda && !isNaN(valor)) {
-                                const nuevoRef = push(inventarioRef);
-                                set(nuevoRef, {
-                                    categoria: String(sheetName).toLowerCase().includes('caballero') ? 'caballero' : 
-                                               String(sheetName).toLowerCase().includes('sagrados') ? 'sagrados' : 'dama',
-                                    referencia: String(getCol('REFE') || 'S/R'),
-                                    nombre: String(prenda),
-                                    color: String(getCol('COLOR') || 'N/A'),
-                                    marca: String(getCol('MARCA') || 'N/A'),
-                                    talla: String(getCol('TALLA') || 'N/A'),
-                                    precio: valor,
-                                    estado: 'disponible',
-                                    marcado: false,
-                                    tipoPago: 'inmediato',
-                                    pagos: []
-                                });
-                                totalImportados++;
-                            }
-                        }
-                    }
-                });
-
-                alert(`¡Se han importado ${totalImportados} productos desde el Excel!`);
+                if (json.length > 0) {
+                    json.forEach(row => {
+                        const newRef = window.fbRef(window.db, 'caja_registradora/productos/' + Date.now() + Math.floor(Math.random()*1000));
+                        window.fbSet(newRef, {
+                            codigo: row['Código'] || row['codigo'] || ('P-' + Math.floor(Math.random()*9000)),
+                            nombre: row['Nombre'] || row['nombre'] || 'Producto',
+                            categoria: row['Categoría'] || row['categoria'] || '',
+                            precio: parseFloat(row['Precio'] || row['precio']) || 0,
+                            estado: row['Estado'] || row['estado'] || 'Disponible'
+                        });
+                    });
+                    alert("Productos importados con éxito.");
+                }
             };
             reader.readAsArrayBuffer(file);
-        };
-    </script>
-</head>
-<body>
-
-    <!-- PANTALLA DE LOGIN / BLOQUEO -->
-    <div id="login-screen">
-        <div class="login-card">
-            <h2>Inventario Sagrados</h2>
-            <p style="color: #666; font-size: 14px;">Ingresa la contraseña para acceder al sistema</p>
-            <input type="password" id="input-password-login" placeholder="Escribe la contraseña" onkeypress="if(event.key === 'Enter') verificarAcceso()">
-            <button onclick="verificarAcceso()">Ingresar al Sistema</button>
-            <div id="login-error-msg" class="login-error">❌ Contraseña incorrecta. Inténtalo de nuevo.</div>
-        </div>
-    </div>
-
-    <!-- CONTENIDO DE LA APLICACIÓN -->
-    <div id="app-content">
-
-        <h1>Inventario Sagrados</h1>
-
-        <div class="menu-principal">
-            <button id="btn-main-registro" class="main-btn" onclick="mostrarSeccion('registro')">Registro</button>
-            <button id="btn-main-inventario" class="main-btn active" onclick="mostrarSeccion('inventario')">Inventario</button>
-            <button id="btn-main-ventas" class="main-btn" onclick="mostrarSeccion('ventas')">Ventas</button>
-            <button id="btn-main-caja" class="main-btn" onclick="mostrarSeccion('caja')">Caja Registradora</button>
-            <button id="btn-admin-config" class="btn btn-admin" style="display:none; width:auto; padding: 12px 15px;" onclick="abrirModalAdmin()">🔑 Cambiar Clave</button>
-            
-            <div class="dropdown-container">
-                <select id="select-apartados" class="select-apartados" onchange="seleccionarApartado(this.value)">
-                    <option value="" disabled selected>Apartados ▼</option>
-                    <option value="dama">Dama</option>
-                    <option value="caballero">Caballero</option>
-                    <option value="ninos">Niños</option>
-                    <option value="calzado">Calzado</option>
-                    <option value="sagrados">Sagrados</option>
-                    <option value="accesorios-religioso">Accesorios-Religioso</option>
-                    <option value="perfumes">Perfumes</option>
-                    <option value="helados">Helados</option>
-                </select>
-            </div>
-        </div>
-
-        <!-- REGISTRO -->
-        <div id="tab-registro" class="tab-content">
-            <h2>Registrar / Editar Producto</h2>
-            <form id="form-prenda" onsubmit="guardarRegistro(event)">
-                <input type="hidden" id="prenda-id">
-                <div>
-                    <label>Categoría / Pestaña:</label>
-                    <select id="categoria" required>
-                        <option value="sagrados">Sagrados</option>
-                        <option value="accesorios-religioso">Accesorios-Religioso</option>
-                        <option value="dama">Dama</option>
-                        <option value="caballero">Caballero</option>
-                        <option value="ninos">Niños</option>
-                        <option value="calzado">Calzado</option>
-                        <option value="perfumes">Perfumes</option>
-                        <option value="helados">Helados</option>
-                    </select>
-                </div>
-                <div>
-                    <label>Referencia:</label>
-                    <input type="text" id="referencia" required placeholder="Ej: REF-101">
-                </div>
-                <div>
-                    <label>Nombre:</label>
-                    <input type="text" id="nombre" required placeholder="Ej: Imagen San José">
-                </div>
-                <div>
-                    <label>Color - Sabor:</label>
-                    <input type="text" id="color" required placeholder="Ej: Dorado">
-                </div>
-                <div>
-                    <label>Marca:</label>
-                    <input type="text" id="marca" required placeholder="Ej: Artesanal">
-                </div>
-                <div>
-                    <label>Talla - Detalle:</label>
-                    <input type="text" id="talla" required placeholder="Ej: 30 cm">
-                </div>
-                <div>
-                    <label>Precio ($):</label>
-                    <input type="number" step="0.01" id="precio" required placeholder="Ej: 45000">
-                </div>
-                <div>
-                    <label>Estado Inicial:</label>
-                    <select id="estado">
-                        <option value="disponible">Disponible</option>
-                        <option value="vendida">Vendida</option>
-                        <option value="sucia">Sucia</option>
-                    </select>
-                </div>
-                <div style="grid-column: 1 / -1; display: flex; gap: 10px;">
-                    <button type="submit" id="btn-guardar" class="btn btn-registrar">Registrar</button>
-                    <button type="button" id="btn-cancelar-edit" class="btn btn-limpiar" onclick="limpiarFormulario()" style="display:none;">Cancelar Edición</button>
-                </div>
-            </form>
-        </div>
-
-        <!-- INVENTARIO GENERAL -->
-        <div id="tab-inventario" class="tab-content active">
-            <h2>Vista General de Inventario</h2>
-            
-            <div class="card-inventario" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <div>
-                    <h3>Conteo de Inventario: <span id="conteo-seleccionados" style="color: #27ae60;">0 / 0</span> marcados</h3>
-                    <button type="button" class="btn btn-limpiar" style="width: auto;" onclick="desmarcarTodos()">Desmarcar Todos</button>
-                </div>
-                <div style="display: flex; gap: 10px;">
-                    <button class="btn btn-excel" style="width: auto;" onclick="exportarAExcel()">Descargar Excel</button>
-                    <label class="btn btn-editar" style="width: auto; margin:0; cursor:pointer;">
-                        Cargar Excel
-                        <input type="file" id="input-excel" accept=".xlsx, .xls" style="display: none;" onchange="importarExcel(event)">
-                    </label>
-                </div>
-            </div>
-
-            <div class="filtros">
-                <div>
-                    <label>Buscar:</label>
-                    <input type="text" id="buscar-input" oninput="renderizarTablas()" placeholder="Buscar producto...">
-                </div>
-                <div>
-                    <label>Filtrar por Estado:</label>
-                    <select id="filtro-estado" onchange="renderizarTablas()">
-                        <option value="todos">Todos los Estados</option>
-                        <option value="disponible">Solo Disponibles</option>
-                        <option value="vendida">Solo Vendidas (Amarillo)</option>
-                        <option value="sucia">Solo Sucias (Rojo)</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Conteo</th><th>Categoría</th><th>REF</th><th>Nombre</th><th>Color/Sabor</th><th>Marca</th><th>Talla</th><th>Precio</th><th>Estado</th><th>Pago / Abonos</th><th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbody-general"></tbody>
-                </table>
-            </div>
-
-            <div style="margin-top: 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
-                <button type="button" class="btn-limpiar" style="width: auto; font-size: 11px; opacity: 0.5;" onclick="activarModoAdministrador()">🛠️ Activar este equipo como Administrador</button>
-                <button type="button" class="btn-peligro-oculto" onclick="eliminarTodoInventario()">Borrar Todo el Inventario</button>
-            </div>
-        </div>
-
-        <!-- PESTAÑAS CATEGORÍAS -->
-        <div id="tab-dama" class="tab-content"><h2>Dama</h2><div class="table-responsive"><table><thead><tr><th>Conteo</th><th>REF</th><th>Nombre</th><th>Color</th><th>Marca</th><th>Talla</th><th>Precio</th><th>Estado</th><th>Pago / Abonos</th><th>Acciones</th></tr></thead><tbody id="tbody-dama"></tbody></table></div></div>
-        <div id="tab-caballero" class="tab-content"><h2>Caballero</h2><div class="table-responsive"><table><thead><tr><th>Conteo</th><th>REF</th><th>Nombre</th><th>Color</th><th>Marca</th><th>Talla</th><th>Precio</th><th>Estado</th><th>Pago / Abonos</th><th>Acciones</th></tr></thead><tbody id="tbody-caballero"></tbody></table></div></div>
-        <div id="tab-ninos" class="tab-content"><h2>Niños</h2><div class="table-responsive"><table><thead><tr><th>Conteo</th><th>REF</th><th>Nombre</th><th>Color</th><th>Marca</th><th>Talla</th><th>Precio</th><th>Estado</th><th>Pago / Abonos</th><th>Acciones</th></tr></thead><tbody id="tbody-ninos"></tbody></table></div></div>
-        <div id="tab-calzado" class="tab-content"><h2>Calzado</h2><div class="table-responsive"><table><thead><tr><th>Conteo</th><th>REF</th><th>Nombre</th><th>Color</th><th>Marca</th><th>Talla</th><th>Precio</th><th>Estado</th><th>Pago / Abonos</th><th>Acciones</th></tr></thead><tbody id="tbody-calzado"></tbody></table></div></div>
-        <div id="tab-sagrados" class="tab-content"><h2>Sagrados</h2><div class="table-responsive"><table><thead><tr><th>Conteo</th><th>REF</th><th>Nombre</th><th>Color</th><th>Marca</th><th>Talla</th><th>Precio</th><th>Estado</th><th>Pago / Abonos</th><th>Acciones</th></tr></thead><tbody id="tbody-sagrados"></tbody></table></div></div>
-        <div id="tab-accesorios-religioso" class="tab-content"><h2>Accesorios-Religioso</h2><div class="table-responsive"><table><thead><tr><th>Conteo</th><th>REF</th><th>Nombre</th><th>Color</th><th>Marca</th><th>Talla</th><th>Precio</th><th>Estado</th><th>Pago / Abonos</th><th>Acciones</th></tr></thead><tbody id="tbody-accesorios-religioso"></tbody></table></div></div>
-        <div id="tab-perfumes" class="tab-content"><h2>Perfumes</h2><div class="table-responsive"><table><thead><tr><th>Conteo</th><th>REF</th><th>Nombre</th><th>Color</th><th>Marca</th><th>Talla</th><th>Precio</th><th>Estado</th><th>Pago / Abonos</th><th>Acciones</th></tr></thead><tbody id="tbody-perfumes"></tbody></table></div></div>
-        <div id="tab-helados" class="tab-content"><h2>Helados</h2><div class="table-responsive"><table><thead><tr><th>Conteo</th><th>REF</th><th>Nombre</th><th>Sabor</th><th>Marca</th><th>Tipo</th><th>Precio</th><th>Estado</th><th>Pago / Abonos</th><th>Acciones</th></tr></thead><tbody id="tbody-helados"></tbody></table></div></div>
-
-        <!-- REPORTES DE VENTAS -->
-        <div id="tab-ventas" class="tab-content">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <h2>Reporte de Ventas e Ingresos Recibidos</h2>
-                <button class="btn btn-excel" style="width:auto;" onclick="exportarVentasExcel()">Descargar Ventas en Excel</button>
-            </div>
-            
-            <div class="filtros">
-                <div>
-                    <label>Filtrar por Periodo:</label>
-                    <select id="tipo-filtro-ventas" onchange="cambiarTipoFiltroVentas()">
-                        <option value="mes">Por Mes</option>
-                        <option value="dia">Por Día</option>
-                    </select>
-                </div>
-                <div id="contenedor-filtro-mes">
-                    <label>Seleccionar Mes y Año:</label>
-                    <input type="month" id="filtro-mes" onchange="renderizarVentas()">
-                </div>
-                <div id="contenedor-filtro-dia" style="display: none;">
-                    <label>Seleccionar Día:</label>
-                    <input type="date" id="filtro-dia" onchange="renderizarVentas()">
-                </div>
-                <div>
-                    <label>Filtrar por Categoría:</label>
-                    <select id="filtro-categoria-ventas" onchange="renderizarVentas()">
-                        <option value="todas">Todas las categorías</option>
-                        <option value="sagrados">Sagrados</option>
-                        <option value="accesorios-religioso">Accesorios-Religioso</option>
-                        <option value="dama">Dama</option>
-                        <option value="caballero">Caballero</option>
-                        <option value="ninos">Niños</option>
-                        <option value="calzado">Calzado</option>
-                        <option value="perfumes">Perfumes</option>
-                        <option value="helados">Helados</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="card-ventas">
-                <div class="grid-caja">
-                    <div class="box-caja">
-                        <h4>Total Recibido</h4>
-                        <p id="total-ventas-monto" style="color: #27ae60;">$0</p>
-                    </div>
-                    <div class="box-caja">
-                        <h4>Total Efectivo</h4>
-                        <p id="total-ventas-efectivo" style="color: #2e7d32;">$0</p>
-                    </div>
-                    <div class="box-caja">
-                        <h4>Total Transferencia</h4>
-                        <p id="total-ventas-transferencia" style="color: #1565c0;">$0</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr><th>Fecha Abono</th><th>Medio Pago</th><th>Tipo Pago</th><th>Detalle Cuota</th><th>Categoría</th><th>REF</th><th>Nombre</th><th>Precio Total</th><th>Monto Recibido</th></tr>
-                    </thead>
-                    <tbody id="tbody-ventas"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- CAJA REGISTRADORA -->
-        <div id="tab-caja" class="tab-content">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <h2>Caja Registradora (Efectivo)</h2>
-                <button class="btn btn-excel" style="width:auto;" onclick="exportarCajaExcel()">Descargar Caja en Excel</button>
-            </div>
-            
-            <div class="card-caja">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
-                    <div>
-                        <label>Filtrar Rango de Tiempo:</label>
-                        <select id="filtro-tiempo-caja" onchange="renderizarCaja()">
-                            <option value="dia">Hoy (Día)</option>
-                            <option value="semana">Esta Semana</option>
-                            <option value="mes">Este Mes</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label>Base Inicial de Caja ($):</label>
-                        <div style="display:flex; gap:5px;">
-                            <input type="number" id="input-base-caja" placeholder="Base caja">
-                            <button class="btn btn-registrar" style="width:auto;" onclick="guardarBaseCaja()">Guardar Base</button>
-                        </div>
-                    </div>
-                    <div style="display: flex; align-items: flex-end;">
-                        <button class="btn btn-retiro" onclick="abrirModalRetiro()">Sacar Plata (Retiro)</button>
-                    </div>
-                </div>
-
-                <div class="grid-caja">
-                    <div class="box-caja">
-                        <h4>Base en Caja</h4>
-                        <p id="caja-base">$0</p>
-                    </div>
-                    <div class="box-caja">
-                        <h4>Entradas en Efectivo</h4>
-                        <p id="caja-entradas" style="color: #27ae60;">+$0</p>
-                    </div>
-                    <div class="box-caja">
-                        <h4>Retiros / Salidas</h4>
-                        <p id="caja-salidas" style="color: #c0392b;">-$0</p>
-                    </div>
-                    <div class="box-caja">
-                        <h4>Total Neto en Caja</h4>
-                        <p id="caja-total-neto" style="color: #2980b9;">$0</p>
-                    </div>
-                </div>
-            </div>
-
-            <h3>Historial de Entradas y Salidas de Efectivo</h3>
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr><th>Fecha</th><th>Tipo de Movimiento</th><th>Concepto / Detalle</th><th>Monto ($)</th><th>Acciones</th></tr>
-                    </thead>
-                    <tbody id="tbody-historial-caja"></tbody>
-                </table>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- MODAL DE CAMBIO DE CONTRASEÑA ADMIN -->
-    <div id="modal-admin" class="modal">
-        <div class="modal-content" style="max-width: 450px;">
-            <span class="close-modal" onclick="cerrarModalAdmin()">&times;</span>
-            <h3>Panel Administrador</h3>
-            <p style="font-size: 13px; color: #555;">Desde aquí puedes cambiar la contraseña de acceso. Al cambiarla, aplicará para todos los computadores inmediatamente.</p>
-            <div>
-                <label>Nueva Contraseña:</label>
-                <input type="text" id="nueva-contrasena" placeholder="Escribe la nueva clave">
-            </div>
-            <div style="margin-top: 20px; display: flex; gap: 10px;">
-                <button type="button" class="btn btn-registrar" onclick="cambiarContrasenaGlobal()">Guardar Nueva Clave</button>
-                <button type="button" class="btn btn-limpiar" onclick="cerrarModalAdmin()">Cancelar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL DE GESTIÓN DE ABONOS Y VENTAS -->
-    <div id="modal-abonos" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="cerrarModal()">&times;</span>
-            <h3 id="modal-titulo">Gestión de Ventas y Abonos</h3>
-            <p id="modal-subtitulo" style="text-align:center; font-weight:bold;"></p>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                <div>
-                    <label>Modalidad de Venta:</label>
-                    <select id="modal-tipo-pago" onchange="cambiarTipoPagoModal(this.value)">
-                        <option value="inmediato">Pago Inmediato</option>
-                        <option value="separe">Plan Separe</option>
-                        <option value="credito">Crédito</option>
-                    </select>
-                </div>
-                <div>
-                    <label>Medio de Pago:</label>
-                    <select id="modal-medio-pago">
-                        <option value="efectivo">Efectivo (Entra a Caja)</option>
-                        <option value="transferencia">Transferencia (NO entra a Caja)</option>
-                    </select>
-                </div>
-            </div>
-
-            <h4>Historial de Abonos / Pagos</h4>
-            <div id="modal-historial" class="history-list"></div>
-
-            <div id="modal-formulario-abono">
-                <h4 id="modal-titulo-nuevo-abono">Registrar / Editar Pago o Abono</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div>
-                        <label>Monto a Abonar ($):</label>
-                        <input type="number" id="modal-monto-abono" placeholder="Ej: 10000">
-                    </div>
-                    <div>
-                        <label>Fecha de Abono:</label>
-                        <input type="date" id="modal-fecha-abono">
-                    </div>
-                </div>
-                <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <button type="button" id="btn-guardar-abono" class="btn btn-registrar" onclick="guardarAbono()">Registrar Abono</button>
-                    <button type="button" class="btn btn-editar" onclick="sugerirCuotaRestante()">Sugerir Restante</button>
-                    <button type="button" id="btn-cancelar-abono-edit" class="btn btn-limpiar" onclick="limpiarFormularioAbono()" style="display:none;">Cancelar Edición</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL SACAR PLATA / RETIRO DE CAJA -->
-    <div id="modal-retiro" class="modal">
-        <div class="modal-content" style="max-width: 450px;">
-            <span class="close-modal" onclick="cerrarModalRetiro()">&times;</span>
-            <h3>Sacar Plata de la Caja</h3>
-            <div>
-                <label>Monto a Retirar ($):</label>
-                <input type="number" id="monto-retiro" placeholder="Ej: 50000">
-            </div>
-            <div style="margin-top: 10px;">
-                <label>Motivo del Retiro:</label>
-                <input type="text" id="motivo-retiro" placeholder="Ej: Pago de insumos o almuerzo">
-            </div>
-            <div style="margin-top: 10px;">
-                <label>Fecha:</label>
-                <input type="date" id="fecha-retiro">
-            </div>
-            <div style="margin-top: 15px; display: flex; gap: 10px;">
-                <button type="button" id="btn-confirmar-retiro" class="btn btn-retiro" onclick="registrarRetiroCaja()">Confirmar Retiro</button>
-                <button type="button" class="btn btn-limpiar" onclick="cerrarModalRetiro()">Cancelar</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        document.getElementById('filtro-mes').value = new Date().toISOString().slice(0, 7);
-        document.getElementById('filtro-dia').value = new Date().toISOString().slice(0, 10);
-        document.getElementById('fecha-retiro').value = new Date().toISOString().slice(0, 10);
-
-        function abrirModalAdmin() {
-            document.getElementById('modal-admin').style.display = 'block';
         }
 
-        function cerrarModalAdmin() {
-            document.getElementById('modal-admin').style.display = 'none';
-        }
-
-        function resetMenuStyles() {
-            document.querySelectorAll('.main-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById('select-apartados').classList.remove('active');
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-        }
-
-        function mostrarSeccion(nombreTab) {
-            resetMenuStyles();
-            document.getElementById(`tab-${nombreTab}`).classList.add('active');
-            const btnActivo = document.getElementById(`btn-main-${nombreTab}`);
-            if (btnActivo) btnActivo.classList.add('active');
-            document.getElementById('select-apartados').value = "";
-        }
-
-        function seleccionarApartado(nombreTab) {
-            if (!nombreTab) return;
-            resetMenuStyles();
-            document.getElementById(`tab-${nombreTab}`).classList.add('active');
-            document.getElementById('select-apartados').classList.add('active');
-        }
-
-        function cargarParaEditar(id) {
-            const prenda = window.inventario[id];
-            if (!prenda) return;
-
-            mostrarSeccion('registro');
-            document.getElementById('prenda-id').value = id;
-            document.getElementById('categoria').value = prenda.categoria;
-            document.getElementById('referencia').value = prenda.referencia;
-            document.getElementById('nombre').value = prenda.nombre;
-            document.getElementById('color').value = prenda.color;
-            document.getElementById('marca').value = prenda.marca;
-            document.getElementById('talla').value = prenda.talla;
-            document.getElementById('precio').value = prenda.precio;
-            document.getElementById('estado').value = prenda.estado;
-
-            document.getElementById('btn-guardar').innerText = "Actualizar";
-            document.getElementById('btn-guardar').className = "btn btn-editar";
-            document.getElementById('btn-cancelar-edit').style.display = "inline-block";
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function limpiarFormulario() {
-            document.getElementById('prenda-id').value = '';
-            document.getElementById('form-prenda').reset();
-            document.getElementById('btn-guardar').innerText = "Registrar";
-            document.getElementById('btn-guardar').className = "btn btn-registrar";
-            document.getElementById('btn-cancelar-edit').style.display = "none";
-        }
-
-        function actualizarContadorInventario() {
-            const totalItems = Object.keys(window.inventario).length;
-            const marcados = Object.values(window.inventario).filter(p => p.marcado === true).length;
-            document.getElementById('conteo-seleccionados').innerText = `${marcados} / ${totalItems}`;
-        }
-
-        function abrirModalAbonos(id, autoCompletarPago = true) {
-            window.productoActualModal = id;
-            limpiarFormularioAbono();
-
-            const prenda = window.inventario[id];
-            if (!prenda) return;
-
-            document.getElementById('modal-titulo').innerText = `Gestión de Ventas - ${prenda.nombre}`;
-            document.getElementById('modal-tipo-pago').value = prenda.tipoPago || 'inmediato';
-
-            const pagos = prenda.pagos || [];
-            const totalAbonado = pagos.reduce((acc, p) => acc + p.monto, 0);
-            const restante = prenda.precio - totalAbonado;
-
-            document.getElementById('modal-subtitulo').innerText = 
-                `Precio Producto: $${Number(prenda.precio).toLocaleString('es-CO')} | Total Abonado: $${totalAbonado.toLocaleString('es-CO')} | Restante: $${restante.toLocaleString('es-CO')}`;
-
-            const historialDiv = document.getElementById('modal-historial');
-            historialDiv.innerHTML = '';
-
-            if (pagos.length === 0) {
-                historialDiv.innerHTML = '<p style="text-align:center; color:#7f8c8d;">No hay pagos registrados aún.</p>';
+        function toggleModal(modalId, show) {
+            const modal = document.getElementById(modalId);
+            if (!modal) return;
+            if (show) {
+                modal.classList.remove('opacity-0', 'pointer-events-none');
+                document.body.classList.add('modal-active');
             } else {
-                pagos.forEach((p, idx) => {
-                    const item = document.createElement('div');
-                    item.className = 'history-item';
-                    const medio = p.medioPago || 'efectivo';
-                    item.innerHTML = `
-                        <div>
-                            <strong>Cuota #${p.cuotaNum}</strong> (${p.fecha}) - 
-                            <span class="badge badge-${p.tipoPago}">${p.tipoPago.toUpperCase()}</span> 
-                            <span class="badge badge-${medio}">${medio.toUpperCase()}</span>: 
-                            <strong>$${Number(p.monto).toLocaleString('es-CO')}</strong>
-                        </div>
-                        <div>
-                            <button class="btn btn-editar" style="padding:3px 8px; font-size:12px;" onclick="editarAbono(${idx})">Editar</button>
-                            <button class="btn btn-eliminar" style="padding:3px 8px; font-size:12px;" onclick="eliminarAbono(${idx})">Eliminar</button>
-                        </div>
-                    `;
-                    historialDiv.appendChild(item);
-                });
-            }
-
-            cambiarTipoPagoModal(document.getElementById('modal-tipo-pago').value);
-
-            if (autoCompletarPago && pagos.length === 0 && (prenda.tipoPago === 'inmediato' || !prenda.tipoPago)) {
-                document.getElementById('modal-monto-abono').value = prenda.precio;
-            } else if (restante > 0 && prenda.tipoPago !== 'inmediato') {
-                document.getElementById('modal-monto-abono').value = restante;
-            }
-
-            document.getElementById('modal-abonos').style.display = 'block';
-        }
-
-        function sugerirCuotaRestante() {
-            const id = window.productoActualModal;
-            const prenda = window.inventario[id];
-            const pagos = prenda.pagos || [];
-            const totalAbonado = pagos.reduce((acc, p) => acc + p.monto, 0);
-            const restante = prenda.precio - totalAbonado;
-            document.getElementById('modal-monto-abono').value = restante > 0 ? restante : 0;
-        }
-
-        function cerrarModal() {
-            document.getElementById('modal-abonos').style.display = 'none';
-            window.productoActualModal = null;
-            limpiarFormularioAbono();
-        }
-
-        function abrirModalRetiro() {
-            window.indiceRetiroEditando = -1;
-            document.getElementById('monto-retiro').value = '';
-            document.getElementById('motivo-retiro').value = '';
-            document.getElementById('fecha-retiro').value = new Date().toISOString().slice(0, 10);
-            document.getElementById('btn-confirmar-retiro').innerText = "Confirmar Retiro";
-            document.getElementById('modal-retiro').style.display = 'block';
-        }
-
-        function cerrarModalRetiro() {
-            document.getElementById('modal-retiro').style.display = 'none';
-        }
-
-        function cambiarTipoFiltroVentas() {
-            const tipo = document.getElementById('tipo-filtro-ventas').value;
-            if (tipo === 'mes') {
-                document.getElementById('contenedor-filtro-mes').style.display = 'block';
-                document.getElementById('contenedor-filtro-dia').style.display = 'none';
-            } else {
-                document.getElementById('contenedor-filtro-mes').style.display = 'none';
-                document.getElementById('contenedor-filtro-dia').style.display = 'block';
-            }
-            renderizarVentas();
-        }
-
-        function renderizarTablas() {
-            const busqueda = (document.getElementById('buscar-input').value || '').toLowerCase();
-            const filtroEstado = document.getElementById('filtro-estado').value;
-
-            const tbodyGeneral = document.getElementById('tbody-general');
-            const tbodies = {
-                'dama': document.getElementById('tbody-dama'),
-                'caballero': document.getElementById('tbody-caballero'),
-                'ninos': document.getElementById('tbody-ninos'),
-                'calzado': document.getElementById('tbody-calzado'),
-                'sagrados': document.getElementById('tbody-sagrados'),
-                'accesorios-religioso': document.getElementById('tbody-accesorios-religioso'),
-                'perfumes': document.getElementById('tbody-perfumes'),
-                'helados': document.getElementById('tbody-helados')
-            };
-
-            tbodyGeneral.innerHTML = '';
-            Object.values(tbodies).forEach(tb => { if(tb) tb.innerHTML = ''; });
-
-            actualizarContadorInventario();
-
-            Object.keys(window.inventario).forEach(id => {
-                const prenda = window.inventario[id];
-                const coincideBusqueda = 
-                    prenda.nombre.toLowerCase().includes(busqueda) ||
-                    prenda.referencia.toLowerCase().includes(busqueda) ||
-                    prenda.marca.toLowerCase().includes(busqueda) ||
-                    prenda.color.toLowerCase().includes(busqueda) ||
-                    prenda.talla.toLowerCase().includes(busqueda);
-
-                const coincideEstado = filtroEstado === 'todos' || prenda.estado === filtroEstado;
-
-                if (!coincideBusqueda || !coincideEstado) return;
-
-                const tr = document.createElement('tr');
-                tr.className = `estado-${prenda.estado}`;
-                if (prenda.marcado) tr.classList.add('seleccionado-inventario');
-
-                const accionesHTML = `
-                    <button class="btn btn-editar" onclick="cargarParaEditar('${id}')">Editar</button>
-                    <button class="btn btn-eliminar" onclick="eliminarPrenda('${id}')">Eliminar</button>
-                    <select onchange="cambiarEstadoRapido('${id}', this.value)" style="width: auto; display: inline-block; padding: 4px;">
-                        <option value="disponible" ${prenda.estado === 'disponible' ? 'selected' : ''}>Disponible</option>
-                        <option value="vendida" ${prenda.estado === 'vendida' ? 'selected' : ''}>Vendida (Amarillo)</option>
-                        <option value="sucia" ${prenda.estado === 'sucia' ? 'selected' : ''}>Sucia (Rojo)</option>
-                    </select>
-                `;
-
-                const pagos = prenda.pagos || [];
-                const totalAbonado = pagos.reduce((acc, p) => acc + p.monto, 0);
-                const tipoBadge = prenda.tipoPago ? `<span class="badge badge-${prenda.tipoPago}">${prenda.tipoPago.toUpperCase()}</span>` : '-';
-                
-                let abonosInfo = '-';
-                if (prenda.estado === 'vendida') {
-                    abonosInfo = `${tipoBadge}<br><small>Abonado: $${totalAbonado.toLocaleString('es-CO')}</small> 
-                    <button class="btn btn-abono" onclick="abrirModalAbonos('${id}')" style="padding:2px 5px; font-size:11px;">+ Abono</button>`;
-                }
-
-                const isChecked = prenda.marcado ? 'checked' : '';
-                const checkboxHTML = `<input type="checkbox" class="checkbox-inventario" ${isChecked} onchange="toggleSeleccion('${id}', this.checked)">`;
-
-                tr.innerHTML = `
-                    <td style="text-align: center;">${checkboxHTML}</td>
-                    <td><strong>${prenda.categoria.toUpperCase()}</strong></td>
-                    <td>${prenda.referencia}</td>
-                    <td>${prenda.nombre}</td>
-                    <td>${prenda.color}</td>
-                    <td>${prenda.marca}</td>
-                    <td>${prenda.talla}</td>
-                    <td>$${Number(prenda.precio).toLocaleString('es-CO')}</td>
-                    <td><strong>${prenda.estado.toUpperCase()}</strong></td>
-                    <td>${abonosInfo}</td>
-                    <td>${accionesHTML}</td>
-                `;
-                tbodyGeneral.appendChild(tr);
-
-                if (tbodies[prenda.categoria]) {
-                    const trCat = tr.cloneNode(true);
-                    trCat.children[0].querySelector('input').onchange = function() { toggleSeleccion(id, this.checked); };
-                    trCat.children[9].querySelector('button')?.addEventListener('click', () => abrirModalAbonos(id));
-                    trCat.removeChild(trCat.children[1]);
-                    tbodies[prenda.categoria].appendChild(trCat);
-                }
-            });
-        }
-
-        function renderizarVentas() {
-            const tipoFiltro = document.getElementById('tipo-filtro-ventas').value;
-            const mesSeleccionado = document.getElementById('filtro-mes').value;
-            const diaSeleccionado = document.getElementById('filtro-dia').value;
-            const categoriaSeleccionada = document.getElementById('filtro-categoria-ventas').value;
-            const tbodyVentas = document.getElementById('tbody-ventas');
-            tbodyVentas.innerHTML = '';
-
-            let totalRecibido = 0;
-            let totalEfectivo = 0;
-            let totalTransferencia = 0;
-
-            Object.keys(window.inventario).forEach(id => {
-                const prenda = window.inventario[id];
-                const coincideCategoria = categoriaSeleccionada === 'todas' || prenda.categoria === categoriaSeleccionada;
-
-                if (prenda.estado === 'vendida' && coincideCategoria && prenda.pagos && prenda.pagos.length > 0) {
-                    prenda.pagos.forEach(p => {
-                        const coincideFecha = tipoFiltro === 'mes' ? 
-                            (p.fecha && p.fecha.startsWith(mesSeleccionado)) : 
-                            (p.fecha === diaSeleccionado);
-
-                        if (coincideFecha) {
-                            const monto = Number(p.monto);
-                            const medio = p.medioPago || 'efectivo';
-
-                            totalRecibido += monto;
-                            if (medio === 'efectivo') totalEfectivo += monto;
-                            else totalTransferencia += monto;
-
-                            const tr = document.createElement('tr');
-                            tr.innerHTML = `
-                                <td>${p.fecha}</td>
-                                <td><span class="badge badge-${medio}">${medio.toUpperCase()}</span></td>
-                                <td><span class="badge badge-${p.tipoPago}">${p.tipoPago.toUpperCase()}</span></td>
-                                <td>Cuota #${p.cuotaNum}</td>
-                                <td><strong>${prenda.categoria.toUpperCase()}</strong></td>
-                                <td>${prenda.referencia}</td>
-                                <td>${prenda.nombre}</td>
-                                <td>$${Number(prenda.precio).toLocaleString('es-CO')}</td>
-                                <td><strong>$${monto.toLocaleString('es-CO')}</strong></td>
-                            `;
-                            tbodyVentas.appendChild(tr);
-                        }
-                    });
-                }
-            });
-
-            document.getElementById('total-ventas-monto').innerText = `$${totalRecibido.toLocaleString('es-CO')}`;
-            document.getElementById('total-ventas-efectivo').innerText = `$${totalEfectivo.toLocaleString('es-CO')}`;
-            document.getElementById('total-ventas-transferencia').innerText = `$${totalTransferencia.toLocaleString('es-CO')}`;
-        }
-
-        function renderizarCaja() {
-            const filtroTiempo = document.getElementById('filtro-tiempo-caja').value;
-            const hoy = new Date();
-            const hoyStr = hoy.toISOString().slice(0, 10);
-            
-            let esFechaEnRango = (fecha) => false;
-
-            if (filtroTiempo === 'dia') {
-                esFechaEnRango = (fecha) => fecha === hoyStr;
-            } else if (filtroTiempo === 'semana') {
-                const primerDiaSemana = new Date(hoy);
-                primerDiaSemana.setDate(hoy.getDate() - hoy.getDay());
-                const primerDiaStr = primerDiaSemana.toISOString().slice(0, 10);
-                esFechaEnRango = (fecha) => fecha >= primerDiaStr && fecha <= hoyStr;
-            } else if (filtroTiempo === 'mes') {
-                const mesActualStr = hoy.toISOString().slice(0, 7);
-                esFechaEnRango = (fecha) => fecha && fecha.startsWith(mesActualStr);
-            }
-
-            const baseCaja = window.datosCaja.base || 0;
-            let entradasEfectivo = 0;
-            let totalRetiros = 0;
-            const historial = [];
-
-            Object.keys(window.inventario).forEach(id => {
-                const prenda = window.inventario[id];
-                if (prenda.estado === 'vendida' && prenda.pagos) {
-                    prenda.pagos.forEach(p => {
-                        const medio = p.medioPago || 'efectivo';
-                        if (medio === 'efectivo' && esFechaEnRango(p.fecha)) {
-                            entradasEfectivo += Number(p.monto);
-                            historial.push({
-                                fecha: p.fecha,
-                                tipo: 'Entrada (Venta)',
-                                concepto: `${prenda.nombre} - Cuota #${p.cuotaNum}`,
-                                monto: Number(p.monto),
-                                esRetiro: false
-                            });
-                        }
-                    });
-                }
-            });
-
-            const retiros = window.datosCaja.retiros || [];
-            retiros.forEach((r, idx) => {
-                if (esFechaEnRango(r.fecha)) {
-                    totalRetiros += Number(r.monto);
-                    historial.push({
-                        fecha: r.fecha,
-                        tipo: 'Salida (Retiro)',
-                        concepto: r.motivo,
-                        monto: -Number(r.monto),
-                        esRetiro: true,
-                        indexRetiro: idx
-                    });
-                }
-            });
-
-            historial.sort((a, b) => b.fecha.localeCompare(a.fecha));
-
-            const totalNeto = baseCaja + entradasEfectivo - totalRetiros;
-
-            document.getElementById('caja-base').innerText = `$${baseCaja.toLocaleString('es-CO')}`;
-            document.getElementById('caja-entradas').innerText = `+$${entradasEfectivo.toLocaleString('es-CO')}`;
-            document.getElementById('caja-salidas').innerText = `-$${totalRetiros.toLocaleString('es-CO')}`;
-            document.getElementById('caja-total-neto').innerText = `$${totalNeto.toLocaleString('es-CO')}`;
-
-            const tbodyHistorial = document.getElementById('tbody-historial-caja');
-            tbodyHistorial.innerHTML = '';
-
-            if (historial.length === 0) {
-                tbodyHistorial.innerHTML = '<tr><td colspan="5" style="text-align:center;">No hay movimientos registrados en este periodo.</td></tr>';
-            } else {
-                historial.forEach(item => {
-                    const tr = document.createElement('tr');
-                    const esEntrada = item.monto > 0;
-                    
-                    let accionesCell = '-';
-                    if (item.esRetiro) {
-                        accionesCell = `
-                            <button class="btn btn-editar" style="padding:2px 6px; font-size:12px;" onclick="editarRetiroCaja(${item.indexRetiro})">Editar</button>
-                            <button class="btn btn-eliminar" style="padding:2px 6px; font-size:12px;" onclick="eliminarRetiroCaja(${item.indexRetiro})">Eliminar</button>
-                        `;
-                    }
-
-                    tr.innerHTML = `
-                        <td>${item.fecha}</td>
-                        <td><strong style="color: ${esEntrada ? '#27ae60' : '#c0392b'};">${item.tipo}</strong></td>
-                        <td>${item.concepto}</td>
-                        <td><strong style="color: ${esEntrada ? '#27ae60' : '#c0392b'};">$${Math.abs(item.monto).toLocaleString('es-CO')}</strong></td>
-                        <td>${accionesCell}</td>
-                    `;
-                    tbodyHistorial.appendChild(tr);
-                });
+                modal.classList.add('opacity-0', 'pointer-events-none');
+                document.body.classList.remove('modal-active');
             }
         }
     </script>
