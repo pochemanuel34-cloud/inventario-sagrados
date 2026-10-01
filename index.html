@@ -1115,11 +1115,16 @@
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
                     <div>
                         <label>Filtrar Rango de Tiempo:</label>
-                        <select id="filtro-tiempo-caja" onchange="renderizarCaja()">
+                        <select id="filtro-tiempo-caja" onchange="cambiarFiltroTiempoCaja()">
                             <option value="dia">Hoy (Día)</option>
                             <option value="semana">Esta Semana</option>
-                            <option value="mes">Este Mes</option>
+                            <option value="mes">Este Mes (Actual)</option>
+                            <option value="mes-especifico">Por Mes Específico</option>
                         </select>
+                    </div>
+                    <div id="contenedor-mes-caja" style="display: none;">
+                        <label>Seleccionar Mes y Año:</label>
+                        <input type="month" id="filtro-mes-especifico-caja" onchange="renderizarCaja()">
                     </div>
                     <div>
                         <label>Base Inicial de Caja ($):</label>
@@ -1175,11 +1180,16 @@
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
                     <div>
                         <label>Filtrar Rango de Tiempo:</label>
-                        <select id="filtro-tiempo-compra" onchange="renderizarCompras()">
+                        <select id="filtro-tiempo-compra" onchange="cambiarFiltroTiempoCompra()">
                             <option value="dia">Hoy (Día)</option>
                             <option value="semana">Esta Semana</option>
-                            <option value="mes">Este Mes</option>
+                            <option value="mes">Este Mes (Actual)</option>
+                            <option value="mes-especifico">Por Mes Específico</option>
                         </select>
+                    </div>
+                    <div id="contenedor-mes-compra" style="display: none;">
+                        <label>Seleccionar Mes y Año:</label>
+                        <input type="month" id="filtro-mes-especifico-compra" onchange="renderizarCompras()">
                     </div>
                     <div style="display: flex; align-items: flex-end;">
                         <button class="btn btn-retiro" onclick="abrirModalRetiroCompra()">Sacar Plata (Compra Mercancía)</button>
@@ -1372,6 +1382,8 @@
         document.getElementById('fecha-retiro').value = new Date().toISOString().slice(0, 10);
         document.getElementById('fecha-retiro-compra').value = new Date().toISOString().slice(0, 10);
         document.getElementById('filtro-mes-total').value = new Date().toISOString().slice(0, 7);
+        document.getElementById('filtro-mes-especifico-caja').value = new Date().toISOString().slice(0, 7);
+        document.getElementById('filtro-mes-especifico-compra').value = new Date().toISOString().slice(0, 7);
 
         function abrirModalAdmin() {
             document.getElementById('modal-admin').style.display = 'block';
@@ -1544,6 +1556,28 @@
             renderizarVentas();
         }
 
+        function cambiarFiltroTiempoCaja() {
+            const filtro = document.getElementById('filtro-tiempo-caja').value;
+            const contenedorMes = document.getElementById('contenedor-mes-caja');
+            if (filtro === 'mes-especifico') {
+                contenedorMes.style.display = 'block';
+            } else {
+                contenedorMes.style.display = 'none';
+            }
+            renderizarCaja();
+        }
+
+        function cambiarFiltroTiempoCompra() {
+            const filtro = document.getElementById('filtro-tiempo-compra').value;
+            const contenedorMes = document.getElementById('contenedor-mes-compra');
+            if (filtro === 'mes-especifico') {
+                contenedorMes.style.display = 'block';
+            } else {
+                contenedorMes.style.display = 'none';
+            }
+            renderizarCompras();
+        }
+
         function renderizarTablas() {
             const busqueda = (document.getElementById('buscar-input').value || '').toLowerCase();
             const filtroEstado = document.getElementById('filtro-estado').value;
@@ -1700,6 +1734,9 @@
             } else if (filtroTiempo === 'mes') {
                 const mesActualStr = hoy.toISOString().slice(0, 7);
                 esFechaEnRango = (fecha) => fecha && fecha.startsWith(mesActualStr);
+            } else if (filtroTiempo === 'mes-especifico') {
+                const mesEspec = document.getElementById('filtro-mes-especifico-caja').value;
+                esFechaEnRango = (fecha) => fecha && fecha.startsWith(mesEspec);
             }
 
             const baseCaja = window.datosCaja.base || 0;
@@ -1798,6 +1835,9 @@
             } else if (filtroTiempo === 'mes') {
                 const mesActualStr = hoy.toISOString().slice(0, 7);
                 esFechaEnRango = (fecha) => fecha && fecha.startsWith(mesActualStr);
+            } else if (filtroTiempo === 'mes-especifico') {
+                const mesEspec = document.getElementById('filtro-mes-especifico-compra').value;
+                esFechaEnRango = (fecha) => fecha && fecha.startsWith(mesEspec);
             }
 
             let entradasTransacciones = 0;
