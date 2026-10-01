@@ -199,27 +199,27 @@
         const db = getDatabase(app);
         const inventarioRef = ref(db, 'inventario');
         const cajaRef = ref(db, 'caja_registradora');
+        const comprasRef = ref(db, 'compras_transacciones');
         const configRef = ref(db, 'config');
 
         window.inventario = {};
         window.datosCaja = { base: 0, retiros: [] };
+        window.datosCompras = { retiros: [] };
         window.productoActualModal = null;
         window.indiceAbonoEditando = -1;
         window.indiceRetiroEditando = -1;
-        window.claveAcceso = "1234"; // Clave por defecto inicial
+        window.indiceRetiroCompraEditando = -1;
+        window.claveAcceso = "1234";
 
-        // Escuchar Configuración (Contraseña Global)
         onValue(configRef, (snapshot) => {
             const config = snapshot.val();
             if (config && config.password) {
                 window.claveAcceso = String(config.password);
             } else {
-                // Crear contraseña inicial por defecto en Firebase si no existe
                 set(ref(db, 'config/password'), "1234");
             }
         });
 
-        // Autenticar Acceso
         window.verificarAcceso = function() {
             const inputPass = document.getElementById('input-password-login').value;
             const errorElement = document.getElementById('login-error-msg');
@@ -233,20 +233,17 @@
             }
         };
 
-        // Verificar si este dispositivo es el Administrador
         function verificarRolAdministrador() {
             const esAdmin = localStorage.getItem('esAdminSagrados') === 'true';
-            if (esAdmin) {
-                const btnConfig = document.getElementById('btn-admin-config');
-                if (btnConfig) btnConfig.style.display = 'inline-block';
-                const secAdmin = document.getElementById('seccion-admin');
-                if (secAdmin) secAdmin.style.display = 'block';
-            }
+            const btnConfig = document.getElementById('btn-admin-config');
+            if (btnConfig) btnConfig.style.display = esAdmin ? 'inline-block' : 'none';
+            
+            const btnBorrarTodo = document.getElementById('btn-borrar-todo-inv');
+            if (btnBorrarTodo) btnBorrarTodo.style.display = esAdmin ? 'inline-block' : 'none';
         }
 
-        // Definir este computador como el Administrador
         window.activarModoAdministrador = function() {
-            const confirmacion = confirm("¿Deseas activar este computador como el Equipo Administrador de Sagrados?\n(Solo este equipo podrá cambiar la contraseña)");
+            const confirmacion = confirm("¿Deseas activar este computador como el Equipo Administrador de Sagrados?\n(Solo este equipo podrá cambiar la contraseña y borrar todo el inventario)");
             if (confirmacion) {
                 localStorage.setItem('esAdminSagrados', 'true');
                 alert("¡Este equipo ha sido activado como Administrador!");
@@ -254,7 +251,6 @@
             }
         };
 
-        // Cambiar la contraseña global en Firebase
         window.cambiarContrasenaGlobal = function() {
             const nuevaPass = document.getElementById('nueva-contrasena').value.trim();
             if (!nuevaPass) {
@@ -271,25 +267,34 @@
             });
         };
 
-        // Escuchar cambios en el Inventario
         onValue(inventarioRef, (snapshot) => {
             const data = snapshot.val();
             window.inventario = data || {};
             renderizarTablas();
             renderizarVentas();
             renderizarCaja();
+            renderizarCompras();
+            renderizarTotalMesNeto();
             if (window.productoActualModal && window.inventario[window.productoActualModal] && document.getElementById('modal-abonos').style.display === 'block') {
                 abrirModalAbonos(window.productoActualModal, false);
             }
         });
 
-        // Escuchar cambios en la Caja Registradora
         onValue(cajaRef, (snapshot) => {
             const data = snapshot.val();
             window.datosCaja = data || { base: 0, retiros: [] };
             if (!window.datosCaja.retiros) window.datosCaja.retiros = [];
             document.getElementById('input-base-caja').value = window.datosCaja.base || 0;
             renderizarCaja();
+            renderizarTotalMesNeto();
+        });
+
+        onValue(comprasRef, (snapshot) => {
+            const data = snapshot.val();
+            window.datosCompras = data || { retiros: [] };
+            if (!window.datosCompras.retiros) window.datosCompras.retiros = [];
+            renderizarCompras();
+            renderizarTotalMesNeto();
         });
 
         window.guardarBaseCaja = function() {
@@ -355,15 +360,18 @@
         };
 
         window.eliminarTodoInventario = function() {
-            // AVISO 1
+            const esAdmin = localStorage.getItem('esAdminSagrados') === 'true';
+            if (!esAdmin) {
+                alert('No tienes permisos de Administrador para borrar el inventario completo.');
+                return;
+            }
+
             const confirm1 = confirm('⚠️ AVISO 1 DE 3:\n¿Estás seguro de que deseas ELIMINAR TODO EL INVENTARIO? Esta acción borrará todos los productos registrados.');
             if (!confirm1) return;
 
-            // AVISO 2
             const confirm2 = confirm('🚨 AVISO 2 DE 3:\n¡Atención! Se eliminarán de forma permanente todos los registros de ropa y sus historiales. ¿Deseas continuar?');
             if (!confirm2) return;
 
-            // AVISO 3
             const confirm3 = confirm('🔥 AVISO FINAL 3 DE 3:\nÚltima advertencia: Escribe "ACEPTAR" en tu mente y confirma. ¿Deseas borrar TODO en este instante?');
             if (!confirm3) return;
 
@@ -562,6 +570,53 @@
             update(ref(db, 'caja_registradora'), { retiros });
         };
 
+        /* LÓGICA RETIROS MANTENIMIENTO / COMPRAS POR TRANSACCIÓN */
+        window.registrarRetiroCompra = function() {
+            const monto = parseFloat(document.getElementById('monto-retiro-compra').value);
+            const motivo = document.getElementById('motivo-retiro-compra').value.trim();
+            const fecha = document.getElementById('fecha-retiro-compra').value;
+
+            if (isNaN(monto) || monto <= 0 || !motivo) {
+                alert('Ingresa un monto válido y un motivo.');
+                return;
+            }
+
+            const retiros = window.datosCompras.retiros ? [...window.datosCompras.retiros] : [];
+
+            if (window.indiceRetiroCompraEditando >= 0) {
+                retiros[window.indiceRetiroCompraEditando] = { monto, motivo, fecha };
+                window.indiceRetiroCompraEditando = -1;
+            } else {
+                retiros.push({ monto, motivo, fecha });
+            }
+
+            update(ref(db, 'compras_transacciones'), { retiros });
+            
+            document.getElementById('monto-retiro-compra').value = '';
+            document.getElementById('motivo-retiro-compra').value = '';
+            cerrarModalRetiroCompra();
+        };
+
+        window.editarRetiroCompra = function(index) {
+            const retiros = window.datosCompras.retiros || [];
+            if (!retiros[index]) return;
+
+            window.indiceRetiroCompraEditando = index;
+            document.getElementById('monto-retiro-compra').value = retiros[index].monto;
+            document.getElementById('motivo-retiro-compra').value = retiros[index].motivo;
+            document.getElementById('fecha-retiro-compra').value = retiros[index].fecha;
+            
+            document.getElementById('btn-confirmar-retiro-compra').innerText = "Actualizar Retiro";
+            abrirModalRetiroCompra();
+        };
+
+        window.eliminarRetiroCompra = function(index) {
+            if (!confirm('¿Deseas eliminar este registro de retiro de compras?')) return;
+            const retiros = window.datosCompras.retiros ? [...window.datosCompras.retiros] : [];
+            retiros.splice(index, 1);
+            update(ref(db, 'compras_transacciones'), { retiros });
+        };
+
         // Descargar Inventario a Excel
         window.exportarAExcel = function() {
             const dataExport = [];
@@ -635,7 +690,6 @@
 
             dataExport.push({ 'FECHA': '-', 'TIPO': 'BASE INICIAL', 'CONCEPTO': 'Base Fija de Caja', 'MONTO': baseCaja });
 
-            // Entradas de ventas
             Object.keys(window.inventario).forEach(id => {
                 const prenda = window.inventario[id];
                 if (prenda.estado === 'vendida' && prenda.pagos) {
@@ -652,7 +706,6 @@
                 }
             });
 
-            // Retiros
             const retiros = window.datosCaja.retiros || [];
             retiros.forEach(r => {
                 dataExport.push({
@@ -667,6 +720,95 @@
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Caja Registradora");
             XLSX.writeFile(workbook, "Reporte_Caja_Registradora.xlsx");
+        };
+
+        // Descargar Compras (Transacciones) a Excel
+        window.exportarComprasExcel = function() {
+            const dataExport = [];
+
+            Object.keys(window.inventario).forEach(id => {
+                const prenda = window.inventario[id];
+                if (prenda.estado === 'vendida' && prenda.pagos) {
+                    prenda.pagos.forEach(p => {
+                        if (p.medioPago === 'transferencia') {
+                            dataExport.push({
+                                'FECHA': p.fecha,
+                                'TIPO': 'ENTRADA (TRANSACCIÓN)',
+                                'CONCEPTO': `${prenda.nombre} - Cuota #${p.cuotaNum}`,
+                                'MONTO': p.monto
+                            });
+                        }
+                    });
+                }
+            });
+
+            const retiros = window.datosCompras.retiros || [];
+            retiros.forEach(r => {
+                dataExport.push({
+                    'FECHA': r.fecha,
+                    'TIPO': 'SALIDA (RETIRO COMPRA MERCANCÍA)',
+                    'CONCEPTO': r.motivo,
+                    'MONTO': -r.monto
+                });
+            });
+
+            const worksheet = XLSX.utils.json_to_sheet(dataExport);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Compras Transacciones");
+            XLSX.writeFile(workbook, "Reporte_Compras_Transacciones.xlsx");
+        };
+
+        // Descargar Total Cada Mes Neto a Excel
+        window.exportarTotalMesExcel = function() {
+            const mesSeleccionado = document.getElementById('filtro-mes-total').value;
+            if (!mesSeleccionado) return;
+
+            let ventasEfectivo = 0;
+            let ventasTransferencia = 0;
+
+            Object.keys(window.inventario).forEach(id => {
+                const prenda = window.inventario[id];
+                if (prenda.estado === 'vendida' && prenda.pagos) {
+                    prenda.pagos.forEach(p => {
+                        if (p.fecha && p.fecha.startsWith(mesSeleccionado)) {
+                            const monto = Number(p.monto);
+                            if (p.medioPago === 'transferencia') ventasTransferencia += monto;
+                            else ventasEfectivo += monto;
+                        }
+                    });
+                }
+            });
+
+            let retirosCaja = 0;
+            (window.datosCaja.retiros || []).forEach(r => {
+                if (r.fecha && r.fecha.startsWith(mesSeleccionado)) {
+                    retirosCaja += Number(r.monto);
+                }
+            });
+
+            let retirosCompras = 0;
+            (window.datosCompras.retiros || []).forEach(r => {
+                if (r.fecha && r.fecha.startsWith(mesSeleccionado)) {
+                    retirosCompras += Number(r.monto);
+                }
+            });
+
+            const totalVentas = ventasEfectivo + ventasTransferencia;
+            const totalNeto = totalVentas - retirosCaja - retirosCompras;
+
+            const dataExport = [
+                { 'CONCEPTO': 'Ventas Efectivo', 'VALOR': ventasEfectivo },
+                { 'CONCEPTO': 'Ventas Transacciones', 'VALOR': ventasTransferencia },
+                { 'CONCEPTO': 'Suma Total Ventas', 'VALOR': totalVentas },
+                { 'CONCEPTO': 'Retiros de Caja Registradora', 'VALOR': retirosCaja },
+                { 'CONCEPTO': 'Compra de Mercancía (Retiros Compra)', 'VALOR': retirosCompras },
+                { 'CONCEPTO': 'TOTAL POR MES NETO', 'VALOR': totalNeto }
+            ];
+
+            const worksheet = XLSX.utils.json_to_sheet(dataExport);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Total Mes Neto");
+            XLSX.writeFile(workbook, `Reporte_Total_Mes_${mesSeleccionado}.xlsx`);
         };
 
         // Cargar/Importar Excel al Inventario
@@ -759,6 +901,8 @@
             <button id="btn-main-inventario" class="main-btn active" onclick="mostrarSeccion('inventario')">Inventario</button>
             <button id="btn-main-ventas" class="main-btn" onclick="mostrarSeccion('ventas')">Ventas</button>
             <button id="btn-main-caja" class="main-btn" onclick="mostrarSeccion('caja')">Caja Registradora</button>
+            <button id="btn-main-compra" class="main-btn" onclick="mostrarSeccion('compra')">Compra</button>
+            <button id="btn-main-total-mes" class="main-btn" onclick="mostrarSeccion('total-mes')">Total Mes Neto</button>
             <button id="btn-admin-config" class="btn btn-admin" style="display:none; width:auto; padding: 12px 15px;" onclick="abrirModalAdmin()">🔑 Cambiar Clave</button>
             
             <div class="dropdown-container">
@@ -880,7 +1024,7 @@
 
             <div style="margin-top: 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
                 <button type="button" class="btn-limpiar" style="width: auto; font-size: 11px; opacity: 0.5;" onclick="activarModoAdministrador()">🛠️ Activar este equipo como Administrador</button>
-                <button type="button" class="btn-peligro-oculto" onclick="eliminarTodoInventario()">Borrar Todo el Inventario</button>
+                <button type="button" id="btn-borrar-todo-inv" class="btn-peligro-oculto" style="display: none;" onclick="eliminarTodoInventario()">Borrar Todo el Inventario</button>
             </div>
         </div>
 
@@ -1020,6 +1164,92 @@
             </div>
         </div>
 
+        <!-- SECCIÓN COMPRA (TRANSACCIONES Y COMPRA DE MERCANCÍA) -->
+        <div id="tab-compra" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <h2>Compras y Transacciones</h2>
+                <button class="btn btn-excel" style="width:auto;" onclick="exportarComprasExcel()">Descargar Compras en Excel</button>
+            </div>
+            
+            <div class="card-caja">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label>Filtrar Rango de Tiempo:</label>
+                        <select id="filtro-tiempo-compra" onchange="renderizarCompras()">
+                            <option value="dia">Hoy (Día)</option>
+                            <option value="semana">Esta Semana</option>
+                            <option value="mes">Este Mes</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button class="btn btn-retiro" onclick="abrirModalRetiroCompra()">Sacar Plata (Compra Mercancía)</button>
+                    </div>
+                </div>
+
+                <div class="grid-caja">
+                    <div class="box-caja">
+                        <h4>Entradas por Transacciones</h4>
+                        <p id="compra-entradas" style="color: #27ae60;">+$0</p>
+                    </div>
+                    <div class="box-caja">
+                        <h4>Retiros (Compra Mercancía)</h4>
+                        <p id="compra-salidas" style="color: #c0392b;">-$0</p>
+                    </div>
+                    <div class="box-caja">
+                        <h4>Total Neto Transacciones</h4>
+                        <p id="compra-total-neto" style="color: #2980b9;">$0</p>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Historial de Transacciones y Compras de Mercancía</h3>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr><th>Fecha</th><th>Tipo de Movimiento</th><th>Concepto / Detalle</th><th>Monto ($)</th><th>Acciones</th></tr>
+                    </thead>
+                    <tbody id="tbody-historial-compra"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SECCIÓN TOTAL MES NETO -->
+        <div id="tab-total-mes" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <h2>Resumen Total Mensual Neto</h2>
+                <button class="btn btn-excel" style="width:auto;" onclick="exportarTotalMesExcel()">Descargar Resumen Mensual en Excel</button>
+            </div>
+
+            <div class="filtros">
+                <div>
+                    <label>Seleccionar Mes y Año:</label>
+                    <input type="month" id="filtro-mes-total" onchange="renderizarTotalMesNeto()">
+                </div>
+            </div>
+
+            <div class="card-ventas">
+                <div class="grid-caja" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                    <div class="box-caja">
+                        <h4>Ventas Totales (Suma)</h4>
+                        <p id="total-mes-ventas" style="color: #27ae60;">$0</p>
+                        <small style="color:#7f8c8d; display:block; margin-top:5px;">Efectivo + Transacciones</small>
+                    </div>
+                    <div class="box-caja">
+                        <h4>Retiros de Caja</h4>
+                        <p id="total-mes-retiros-caja" style="color: #c0392b;">-$0</p>
+                    </div>
+                    <div class="box-caja">
+                        <h4>Compra de Mercancía</h4>
+                        <p id="total-mes-retiros-compras" style="color: #e67e22;">-$0</p>
+                    </div>
+                    <div class="box-caja">
+                        <h4>Total por Mes Neto</h4>
+                        <p id="total-mes-neto" style="color: #2980b9; font-size: 24px;">$0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- MODAL DE CAMBIO DE CONTRASEÑA ADMIN -->
@@ -1059,7 +1289,7 @@
                     <label>Medio de Pago:</label>
                     <select id="modal-medio-pago">
                         <option value="efectivo">Efectivo (Entra a Caja)</option>
-                        <option value="transferencia">Transferencia (NO entra a Caja)</option>
+                        <option value="transferencia">Transferencia (Entra a Compras)</option>
                     </select>
                 </div>
             </div>
@@ -1112,10 +1342,36 @@
         </div>
     </div>
 
+    <!-- MODAL SACAR PLATA DE COMPRA DE MERCANCÍA -->
+    <div id="modal-retiro-compra" class="modal">
+        <div class="modal-content" style="max-width: 450px;">
+            <span class="close-modal" onclick="cerrarModalRetiroCompra()">&times;</span>
+            <h3>Sacar Plata (Compra Mercancía)</h3>
+            <div>
+                <label>Monto a Retirar ($):</label>
+                <input type="number" id="monto-retiro-compra" placeholder="Ej: 150000">
+            </div>
+            <div style="margin-top: 10px;">
+                <label>Motivo de la Compra / Proveedor:</label>
+                <input type="text" id="motivo-retiro-compra" placeholder="Ej: Pago a proveedor de camisetas">
+            </div>
+            <div style="margin-top: 10px;">
+                <label>Fecha:</label>
+                <input type="date" id="fecha-retiro-compra">
+            </div>
+            <div style="margin-top: 15px; display: flex; gap: 10px;">
+                <button type="button" id="btn-confirmar-retiro-compra" class="btn btn-retiro" onclick="registrarRetiroCompra()">Confirmar Retiro</button>
+                <button type="button" class="btn btn-limpiar" onclick="cerrarModalRetiroCompra()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.getElementById('filtro-mes').value = new Date().toISOString().slice(0, 7);
         document.getElementById('filtro-dia').value = new Date().toISOString().slice(0, 10);
         document.getElementById('fecha-retiro').value = new Date().toISOString().slice(0, 10);
+        document.getElementById('fecha-retiro-compra').value = new Date().toISOString().slice(0, 10);
+        document.getElementById('filtro-mes-total').value = new Date().toISOString().slice(0, 7);
 
         function abrirModalAdmin() {
             document.getElementById('modal-admin').style.display = 'block';
@@ -1261,6 +1517,19 @@
 
         function cerrarModalRetiro() {
             document.getElementById('modal-retiro').style.display = 'none';
+        }
+
+        function abrirModalRetiroCompra() {
+            window.indiceRetiroCompraEditando = -1;
+            document.getElementById('monto-retiro-compra').value = '';
+            document.getElementById('motivo-retiro-compra').value = '';
+            document.getElementById('fecha-retiro-compra').value = new Date().toISOString().slice(0, 10);
+            document.getElementById('btn-confirmar-retiro-compra').innerText = "Confirmar Retiro";
+            document.getElementById('modal-retiro-compra').style.display = 'block';
+        }
+
+        function cerrarModalRetiroCompra() {
+            document.getElementById('modal-retiro-compra').style.display = 'none';
         }
 
         function cambiarTipoFiltroVentas() {
@@ -1509,6 +1778,150 @@
                     tbodyHistorial.appendChild(tr);
                 });
             }
+        }
+
+        /* RENDERIZAR SECCIÓN COMPRA (TRANSACCIONES) */
+        function renderizarCompras() {
+            const filtroTiempo = document.getElementById('filtro-tiempo-compra').value;
+            const hoy = new Date();
+            const hoyStr = hoy.toISOString().slice(0, 10);
+            
+            let esFechaEnRango = (fecha) => false;
+
+            if (filtroTiempo === 'dia') {
+                esFechaEnRango = (fecha) => fecha === hoyStr;
+            } else if (filtroTiempo === 'semana') {
+                const primerDiaSemana = new Date(hoy);
+                primerDiaSemana.setDate(hoy.getDate() - hoy.getDay());
+                const primerDiaStr = primerDiaSemana.toISOString().slice(0, 10);
+                esFechaEnRango = (fecha) => fecha >= primerDiaStr && fecha <= hoyStr;
+            } else if (filtroTiempo === 'mes') {
+                const mesActualStr = hoy.toISOString().slice(0, 7);
+                esFechaEnRango = (fecha) => fecha && fecha.startsWith(mesActualStr);
+            }
+
+            let entradasTransacciones = 0;
+            let totalRetirosCompras = 0;
+            const historial = [];
+
+            Object.keys(window.inventario).forEach(id => {
+                const prenda = window.inventario[id];
+                if (prenda.estado === 'vendida' && prenda.pagos) {
+                    prenda.pagos.forEach(p => {
+                        if (p.medioPago === 'transferencia' && esFechaEnRango(p.fecha)) {
+                            entradasTransacciones += Number(p.monto);
+                            historial.push({
+                                fecha: p.fecha,
+                                tipo: 'Entrada (Transacción)',
+                                concepto: `${prenda.nombre} - Cuota #${p.cuotaNum}`,
+                                monto: Number(p.monto),
+                                esRetiro: false
+                            });
+                        }
+                    });
+                }
+            });
+
+            const retiros = window.datosCompras.retiros || [];
+            retiros.forEach((r, idx) => {
+                if (esFechaEnRango(r.fecha)) {
+                    totalRetirosCompras += Number(r.monto);
+                    historial.push({
+                        fecha: r.fecha,
+                        tipo: 'Salida (Compra Mercancía)',
+                        concepto: r.motivo,
+                        monto: -Number(r.monto),
+                        esRetiro: true,
+                        indexRetiro: idx
+                    });
+                }
+            });
+
+            historial.sort((a, b) => b.fecha.localeCompare(a.fecha));
+
+            const totalNeto = entradasTransacciones - totalRetirosCompras;
+
+            document.getElementById('compra-entradas').innerText = `+$${entradasTransacciones.toLocaleString('es-CO')}`;
+            document.getElementById('compra-salidas').innerText = `-$${totalRetirosCompras.toLocaleString('es-CO')}`;
+            document.getElementById('compra-total-neto').innerText = `$${totalNeto.toLocaleString('es-CO')}`;
+
+            const tbodyHistorial = document.getElementById('tbody-historial-compra');
+            tbodyHistorial.innerHTML = '';
+
+            if (historial.length === 0) {
+                tbodyHistorial.innerHTML = '<tr><td colspan="5" style="text-align:center;">No hay movimientos registrados en este periodo.</td></tr>';
+            } else {
+                historial.forEach(item => {
+                    const tr = document.createElement('tr');
+                    const esEntrada = item.monto > 0;
+                    
+                    let accionesCell = '-';
+                    if (item.esRetiro) {
+                        accionesCell = `
+                            <button class="btn btn-editar" style="padding:2px 6px; font-size:12px;" onclick="editarRetiroCompra(${item.indexRetiro})">Editar</button>
+                            <button class="btn btn-eliminar" style="padding:2px 6px; font-size:12px;" onclick="eliminarRetiroCompra(${item.indexRetiro})">Eliminar</button>
+                        `;
+                    }
+
+                    tr.innerHTML = `
+                        <td>${item.fecha}</td>
+                        <td><strong style="color: ${esEntrada ? '#27ae60' : '#c0392b'};">${item.tipo}</strong></td>
+                        <td>${item.concepto}</td>
+                        <td><strong style="color: ${esEntrada ? '#27ae60' : '#c0392b'};">$${Math.abs(item.monto).toLocaleString('es-CO')}</strong></td>
+                        <td>${accionesCell}</td>
+                    `;
+                    tbodyHistorial.appendChild(tr);
+                });
+            }
+        }
+
+        /* RENDERIZAR TOTAL MES NETO */
+        function renderizarTotalMesNeto() {
+            const mesSeleccionado = document.getElementById('filtro-mes-total').value;
+            if (!mesSeleccionado) return;
+
+            let ventasEfectivo = 0;
+            let ventasTransferencia = 0;
+
+            Object.keys(window.inventario).forEach(id => {
+                const prenda = window.inventario[id];
+                if (prenda.estado === 'vendida' && prenda.pagos) {
+                    prenda.pagos.forEach(p => {
+                        if (p.fecha && p.fecha.startsWith(mesSeleccionado)) {
+                            const monto = Number(p.monto);
+                            if (p.medioPago === 'transferencia') {
+                                ventasTransferencia += monto;
+                            } else {
+                                ventasEfectivo += monto;
+                            }
+                        }
+                    });
+                }
+            });
+
+            let retirosCaja = 0;
+            const retirosCajaList = window.datosCaja.retiros || [];
+            retirosCajaList.forEach(r => {
+                if (r.fecha && r.fecha.startsWith(mesSeleccionado)) {
+                    retirosCaja += Number(r.monto);
+                }
+            });
+
+            let retirosCompras = 0;
+            const retirosComprasList = window.datosCompras.retiros || [];
+            retirosComprasList.forEach(r => {
+                if (r.fecha && r.fecha.startsWith(mesSeleccionado)) {
+                    retirosCompras += Number(r.monto);
+                }
+            });
+
+            const totalVentas = ventasEfectivo + ventasTransferencia;
+            const totalNeto = totalVentas - retirosCaja - retirosCompras;
+
+            document.getElementById('total-mes-ventas').innerText = `$${totalVentas.toLocaleString('es-CO')}`;
+            document.getElementById('total-mes-retiros-caja').innerText = `-$${retirosCaja.toLocaleString('es-CO')}`;
+            document.getElementById('total-mes-retiros-compras').innerText = `-$${retirosCompras.toLocaleString('es-CO')}`;
+            document.getElementById('total-mes-neto').innerText = `$${totalNeto.toLocaleString('es-CO')}`;
         }
     </script>
 </body>
